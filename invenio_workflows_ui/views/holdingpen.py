@@ -1,29 +1,23 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2016 CERN.
+# Copyright (C) 2013, 2014, 2015, 2016 CERN.
 #
-# Invenio is free software; you can redistribute it
-# and/or modify it under the terms of the GNU General Public License as
+# Invenio is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as
 # published by the Free Software Foundation; either version 2 of the
 # License, or (at your option) any later version.
 #
-# Invenio is distributed in the hope that it will be
-# useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+# Invenio is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 # General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with Invenio; if not, write to the
-# Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
-# MA 02111-1307, USA.
-#
-# In applying this license, CERN does not
-# waive the privileges and immunities granted to it by virtue of its status
-# as an Intergovernmental Organization or submit itself to any jurisdiction.
+# along with Invenio; if not, write to the Free Software Foundation, Inc.,
+# 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 
-"""UI layer for invenio-workflows.
-
+"""
 Holding Pen is a web interface overlay for all DbWorkflowObject's.
 
 This area is targeted to catalogers and administrators for inspecting
@@ -33,7 +27,7 @@ with halted workflows.
 For example, accepting submissions or other tasks.
 """
 
-from __future__ import absolute_import, print_function
+from __future__ import unicode_literals
 
 import json
 
@@ -47,16 +41,19 @@ from flask import (
     render_template,
     request,
     send_from_directory,
-    session,
-    current_app
+    session
 )
 
-from flask_babelex import gettext as _
+from flask import current_app
+
 from flask_breadcrumbs import default_breadcrumb_root, register_breadcrumb
 
 from flask_login import login_required
 
 from flask_menu import register_menu
+
+from invenio_base.decorators import templated, wash_arguments
+from invenio_base.i18n import _
 
 from invenio_ext.principal import permission_required
 
@@ -64,10 +61,9 @@ from invenio_utils.pagination import Pagination
 
 from six import text_type
 
+from ..acl import viewholdingpen
 from ..api import continue_oid_delayed, start_delayed
 from ..models import DbWorkflowObject, ObjectStatus, Workflow
-
-from ..acl import viewholdingpen
 from ..registry import actions
 from ..search import get_holdingpen_objects
 from ..utils import (
@@ -79,15 +75,11 @@ from ..utils import (
 )
 
 
-blueprint = Blueprint(
-    'invenio_workflows_ui',
-    __name__,
-    url_prefix="/holdingpen",
-    template_folder='templates',
-    static_folder='static',
-)
+blueprint = Blueprint('holdingpen', __name__, url_prefix="/admin/holdingpen",
+                      template_folder='../templates',
+                      static_folder='../static')
 
-# TODO Could we avoid having Yet Another Mapping?
+# XXX Could we avoid having Yet Another Mapping?
 default_breadcrumb_root(blueprint, '.holdingpen')
 HOLDINGPEN_WORKFLOW_STATES = {
     DbWorkflowObject.known_statuses.HALTED: {
