@@ -1,7 +1,45 @@
+{#
+# This file is part of Invenio.
+# Copyright (C) 2014, 2015, 2016 CERN.
+#
+# Invenio is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; either version 2 of the
+# License, or (at your option) any later version.
+#
+# Invenio is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Invenio; if not, write to the Free Software Foundation, Inc.,
+# 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
+#}
+
 {%- extends config.INVENIO_WORKFLOWS_UI_BASE_TEMPLATE %}
 
-{%- block page_body %}
-TODO: Example template, please remove if you do not need it.
-{{_('Welcome to %(module_name)s', module_name=module_name)}}
-{%- endblock %}
+{% set title = _("Your Pending Actions") %}
 
+{% block page_body %}
+  <div class="row">
+    <div class="col-md-6 col-sm-12">
+      <ul class="list-group">
+        <li class="list-group-item list-group-item-warning">
+          <span class="badge">{{ halted_state_total }}</span>
+          {{ _("Records that needs attention") }}
+        </li>
+        <li class="list-group-item list-group-item-danger">
+          <span class="badge">{{ error_state_total }}</span>
+          {{ _("Records in error state") }}
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-12">
+      <a href="{{ url_for('holdingpen.list_objects')|safe }}" class="btn btn-primary btn-lg" role="button">{{ _('Go to Holding Pen') }}</a>
+    </div>
+  </div>
+{% endblock %}
