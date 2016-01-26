@@ -52,31 +52,22 @@ from flask import (
 )
 
 from flask_babelex import gettext as _
-from flask_breadcrumbs import default_breadcrumb_root, register_breadcrumb
 
 from flask_login import login_required
 
-from flask_menu import register_menu
+from invenio_workflows.api import continue_oid_delayed, start_delayed
+from invenio_workflows.models import DbWorkflowObject, ObjectStatus, Workflow
 
-from invenio_ext.principal import permission_required
-
-from invenio_utils.pagination import Pagination
-
-from six import text_type
-
-from ..api import continue_oid_delayed, start_delayed
-from ..models import DbWorkflowObject, ObjectStatus, Workflow
-
-from ..acl import viewholdingpen
-from ..registry import actions
-from ..search import get_holdingpen_objects
-from ..utils import (
-    alert_response_wrapper,
-    get_data_types,
-    get_previous_next_objects,
-    get_rendered_task_results,
-    get_rows
-)
+#from ..acl import viewholdingpen
+#from ..registry import actions
+#from ..search import get_holdingpen_objects
+#from ..utils import (
+#    alert_response_wrapper,
+#    get_data_types,
+#    get_previous_next_objects,
+#    get_rendered_task_results,
+#    get_rows
+#)
 
 
 blueprint = Blueprint(
@@ -88,7 +79,6 @@ blueprint = Blueprint(
 )
 
 # TODO Could we avoid having Yet Another Mapping?
-default_breadcrumb_root(blueprint, '.holdingpen')
 HOLDINGPEN_WORKFLOW_STATES = {
     DbWorkflowObject.known_statuses.HALTED: {
         'message': _(DbWorkflowObject.known_statuses.HALTED.label),
@@ -119,10 +109,7 @@ HOLDINGPEN_WORKFLOW_STATES = {
 
 @blueprint.route('/', methods=['GET', 'POST'])
 @blueprint.route('/index', methods=['GET', 'POST'])
-@login_required
-@register_menu(blueprint, 'personalize.holdingpen', _('Your Pending Actions'))
-@register_breadcrumb(blueprint, '.', _('Holdingpen'))
-@templated('workflows/index.html')
+#@login_required
 def index():
     """
     Display main interface of Holdingpen.
@@ -130,28 +117,20 @@ def index():
     Acts as a hub for catalogers (may be removed)
     """
     # TODO: Add user filtering
-    error_state_total = get_holdingpen_objects(
-        tags_list=[ObjectStatus.labels[ObjectStatus.ERROR.value]]
-    )[1]
-    halted_state_total = get_holdingpen_objects(
-        tags_list=[ObjectStatus.labels[ObjectStatus.HALTED.value]]
-    )[1]
-    return dict(error_state_total=error_state_total,
-                halted_state_total=halted_state_total)
+    #error_state_total = get_holdingpen_objects(
+    #    tags_list=[ObjectStatus.labels[ObjectStatus.ERROR.value]]
+    #)[1]
+    #halted_state_total = get_holdingpen_objects(
+#        tags_list=[ObjectStatus.labels[ObjectStatus.HALTED.value]]
+#    )[1]
+    return render_template('invenio_workflows_ui/index.html')
 
 
 @blueprint.route('/load', methods=['GET', 'POST'])
-@login_required
-@templated('workflows/list.html')
-@permission_required(viewholdingpen.name)
-@wash_arguments({
-    'page': (int, 1),
-    'per_page': (int, 0),
-    'sort_key': (unicode, "modified"),
-})
-def load(page, per_page, sort_key):
+#@login_required
+#@permission_required(viewholdingpen.name)
+def load(page=1, per_page=0, sort_key="modified"):
     """Load objects for the table."""
-    # FIXME: Load tags in this way until wash_arguments handles lists.
     tags = request.args.getlist("tags[]") or []  # empty to show all
     sort_key = request.args.get(
         'sort_key', session.get('holdingpen_sort_key', "modified")
@@ -207,9 +186,8 @@ def load(page, per_page, sort_key):
 @blueprint.route('/list', methods=['GET', ])
 @blueprint.route('/list/', methods=['GET', ])
 @blueprint.route('/list/<tags_slug>', methods=['GET', ])
-@register_breadcrumb(blueprint, '.records', _('Records'))
-@login_required
-@permission_required(viewholdingpen.name)
+#@login_required
+#@permission_required(viewholdingpen.name)
 def list_objects(tags_slug=None):
     """Display main table interface of Holdingpen."""
     tags = [tag for tag in tags_slug.split(' AND ')] if tags_slug \
@@ -244,9 +222,8 @@ def list_objects(tags_slug=None):
 
 @blueprint.route('/<int:objectid>', methods=['GET', 'POST'])
 @blueprint.route('/details/<int:objectid>', methods=['GET', 'POST'])
-@register_breadcrumb(blueprint, '.details', _("Object Details"))
-@login_required
-@permission_required(viewholdingpen.name)
+#@login_required
+#@permission_required(viewholdingpen.name)
 def details(objectid):
     """Display info about the object."""
     bwobject = DbWorkflowObject.query.get_or_404(objectid)
@@ -282,8 +259,8 @@ def details(objectid):
 
 @blueprint.route('/result/<int:object_id>/<path:filename>',
                  methods=['POST', 'GET'])
-@login_required
-@permission_required(viewholdingpen.name)
+#@login_required
+#@permission_required(viewholdingpen.name)
 def get_file_from_task_result(object_id=None, filename=None):
     """Send the requested file to user from a workflow task result.
 
@@ -310,8 +287,8 @@ def get_file_from_task_result(object_id=None, filename=None):
 
 @blueprint.route('/file/<int:object_id>/<path:filename>',
                  methods=['POST', 'GET'])
-@login_required
-@permission_required(viewholdingpen.name)
+#@login_required
+#@permission_required(viewholdingpen.name)
 def get_file_from_object(object_id=None, filename=None):
     """Send the requested file to user from a workflow object FFT value."""
     bwobject = DbWorkflowObject.query.get_or_404(object_id)
@@ -325,11 +302,10 @@ def get_file_from_object(object_id=None, filename=None):
 
 
 @blueprint.route('/restart_record', methods=['GET', 'POST'])
-@login_required
-@permission_required(viewholdingpen.name)
-@wash_arguments({'objectid': (int, 0)})
-@alert_response_wrapper
-def restart_record(objectid, start_point='continue_next'):
+#@login_required
+#@permission_required(viewholdingpen.name)
+#@alert_response_wrapper
+def restart_record(objectid=None, start_point='continue_next'):
     """Restart the initial object in its workflow."""
     bwobject = DbWorkflowObject.query.get_or_404(objectid)
 
@@ -344,11 +320,10 @@ def restart_record(objectid, start_point='continue_next'):
 
 
 @blueprint.route('/continue_record', methods=['GET', 'POST'])
-@login_required
-@permission_required(viewholdingpen.name)
-@wash_arguments({'objectid': (int, 0)})
-@alert_response_wrapper
-def continue_record(objectid):
+#@login_required
+#@permission_required(viewholdingpen.name)
+#@alert_response_wrapper
+def continue_record(objectid=None):
     """Continue workflow for current object."""
     continue_oid_delayed(oid=objectid, start_point='continue_next')
     return jsonify(dict(
@@ -358,11 +333,10 @@ def continue_record(objectid):
 
 
 @blueprint.route('/restart_record_prev', methods=['GET', 'POST'])
-@login_required
-@permission_required(viewholdingpen.name)
-@wash_arguments({'objectid': (int, 0)})
-@alert_response_wrapper
-def restart_record_prev(objectid):
+#@login_required
+#@permission_required(viewholdingpen.name)
+#@alert_response_wrapper
+def restart_record_prev(objectid=None):
     """Restart the last task for current object."""
     continue_oid_delayed(oid=objectid, start_point="restart_task")
     return jsonify(dict(
@@ -372,11 +346,10 @@ def restart_record_prev(objectid):
 
 
 @blueprint.route('/delete', methods=['GET', 'POST'])
-@login_required
-@permission_required(viewholdingpen.name)
-@wash_arguments({'objectid': (int, 0)})
-@alert_response_wrapper
-def delete_from_db(objectid):
+#@login_required
+#@permission_required(viewholdingpen.name)
+#@alert_response_wrapper
+def delete_from_db(objectid=None):
     """Delete the object from the db."""
     DbWorkflowObject.delete(objectid)
     return jsonify(dict(
@@ -386,11 +359,10 @@ def delete_from_db(objectid):
 
 
 @blueprint.route('/delete_multi', methods=['GET', 'POST'])
-@login_required
-@permission_required(viewholdingpen.name)
-@wash_arguments({'bwolist': (text_type, "")})
-@alert_response_wrapper
-def delete_multi(bwolist):
+#@login_required
+#@permission_required(viewholdingpen.name)
+#@alert_response_wrapper
+def delete_multi(bwolist=None):
     """Delete list of objects from the db."""
     from ..utils import parse_bwids
     bwolist = parse_bwids(bwolist)
@@ -403,8 +375,8 @@ def delete_multi(bwolist):
 
 
 @blueprint.route('/resolve', methods=['GET', 'POST'])
-@login_required
-@permission_required(viewholdingpen.name)
+#@login_required
+#@permission_required(viewholdingpen.name)
 def resolve_action():
     """Resolve the action taken.
 
@@ -437,11 +409,9 @@ def resolve_action():
 
 
 @blueprint.route('/entry_data_preview', methods=['GET', 'POST'])
-@login_required
-@permission_required(viewholdingpen.name)
-@wash_arguments({'objectid': (int, 0),
-                 'of': (text_type, None)})
-def entry_data_preview(objectid, of):
+#@login_required
+#@permission_required(viewholdingpen.name)
+def entry_data_preview(objectid=None, of=None):
     """Present the data in a human readble form or in xml code."""
     bwobject = DbWorkflowObject.query.get_or_404(objectid)
     if not bwobject:
