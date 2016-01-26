@@ -44,6 +44,8 @@ def test_init():
     app = Flask('testapp')
     ext = InvenioWorkflowsUI(app)
     assert 'invenio-workflows-ui' in app.extensions
+    ext.register_action('test_action', "test")
+    assert 'test_action' in app.extensions['invenio-workflows-ui'].actions
 
     app = Flask('testapp')
     ext = InvenioWorkflowsUI()
