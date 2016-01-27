@@ -21,8 +21,8 @@
 define(
   [
     'jquery',
-    'flight/lib/component',
-    'hgn!js/workflows/templates/pagination'
+    'node_modules/flightjs/build/flight.js',
+    //'hgn!js/workflows/templates/pagination'
   ],
   function(
     $,

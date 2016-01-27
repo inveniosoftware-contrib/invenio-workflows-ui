@@ -42,6 +42,7 @@ tests_require = [
     'pytest-cov>=1.8.0',
     'pytest-pep8>=1.0.6',
     'pytest>=2.8.0',
+    "invenio-assets>=1.0.0a1"
 ]
 
 extras_require = {
@@ -129,7 +130,10 @@ setup(
         # TODO: Edit these entry points to fit your needs.
         # 'invenio_access.actions': [],
         # 'invenio_admin.actions': [],
-        # 'invenio_assets.bundles': [],
+        'invenio_assets.bundles': [
+            'invenio_workflows_ui_css = invenio_workflows_ui.bundles:css',
+            'invenio_workflows_ui_js = invenio_workflows_ui.bundles:js'
+        ],
         # 'invenio_base.api_apps': [],
         # 'invenio_base.api_blueprints': [],
         # 'invenio_base.blueprints': [],

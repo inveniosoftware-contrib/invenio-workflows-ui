@@ -21,7 +21,7 @@
 define(
   [
     'jquery',
-    'flight/lib/component'
+    'node_modules/flightjs/build/flight.js',
   ],
   function(
     $,
