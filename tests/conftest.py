@@ -28,7 +28,16 @@
 from __future__ import absolute_import, print_function
 
 import pytest
+
+import os
+
 from flask import Flask
+from flask_cli import FlaskCLI
+from flask_babelex import Babel
+
+from invenio_db import InvenioDB
+from invenio_workflows import InvenioWorkflows
+from invenio_workflows_ui import InvenioWorkflowsUI
 
 
 @pytest.fixture()
@@ -36,6 +45,13 @@ def app():
     """Flask application fixture."""
     app = Flask('testapp')
     app.config.update(
-        TESTING=True
+        TESTING=True,
+        SQLALCHEMY_DATABASE_URI=os.environ.get(
+            'SQLALCHEMY_DATABASE_URI', 'sqlite:///test.db')
     )
+    Babel(app)
+    FlaskCLI(app)
+    InvenioDB(app)
+    InvenioWorkflows(app)
+    InvenioWorkflowsUI(app)
     return app

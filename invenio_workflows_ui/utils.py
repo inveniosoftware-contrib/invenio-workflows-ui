@@ -22,158 +22,12 @@
 from functools import wraps
 
 from flask import current_app, jsonify, render_template
-from operator import attrgetter
 
 import msgpack
 
 from six import text_type
 
-
-class BibWorkflowObjectIdContainer(object):
-
-    """Mapping from an ID to DbWorkflowObject.
-
-    This class is only used to be able to store a workflow ID and
-    to retrieve easily the workflow from this ID from another process,
-    such as a Celery worker process.
-
-    It is used mainly to avoid problems with SQLAlchemy sessions
-    when we use different processes.
-    """
-
-    def __init__(self, bibworkflowobject=None):
-        """Initialize the object, optionally passing a DbWorkflowObject."""
-        if bibworkflowobject is not None:
-            self.id = bibworkflowobject.id
-        else:
-            self.id = None
-
-    def get_object(self):
-        """Get the DbWorkflowObject from self.id."""
-        from invenio_workflows.models import DbWorkflowObject
-
-        if self.id is not None:
-            return DbWorkflowObject.query.filter(
-                DbWorkflowObject.id == self.id
-            ).one()
-        else:
-            return None
-
-    def from_dict(self, dict_to_process):
-        """Take a dict with special keys and set the current id.
-
-        :param dict_to_process: dict created before with to_dict()
-        :type dict_to_process: dict
-
-        :return: self, BibWorkflowObjectIdContainer.
-        """
-        self.id = dict_to_process[str(self.__class__)]["id"]
-        return self
-
-    def to_dict(self):
-        """Create a dict with special keys for later retrieval."""
-        return {str(self.__class__): self.__dict__}
-
-
-def get_workflow_definition(name):
-    """Try to load the given workflow from the system."""
-    if name in workflows:
-        return getattr(workflows[name], "workflow", None)
-    else:
-        from .definitions import WorkflowMissing
-        return WorkflowMissing.workflow
-
-
-class dictproperty(object):
-
-    """Use a dict attribute as a @property.
-
-    This is a minimal descriptor class that creates a proxy object,
-    which implements __getitem__, __setitem__ and __delitem__,
-    passing requests through to the functions that the user
-    provided to the dictproperty constructor.
-    """
-
-    class _proxy(object):
-
-        """The proxy object."""
-
-        def __init__(self, obj, fget, fset, fdel):
-            """Init the proxy object."""
-            self._obj = obj
-            self._fget = fget
-            self._fset = fset
-            self._fdel = fdel
-
-        def __getitem__(self, key):
-            """Get value from key."""
-            return self._fget(self._obj, key)
-
-        def __setitem__(self, key, value):
-            """Set value for key."""
-            self._fset(self._obj, key, value)
-
-        def __delitem__(self, key):
-            """Delete value for key."""
-            self._fdel(self._obj, key)
-
-    def __init__(self, fget=None, fset=None, fdel=None, doc=None):
-        """Init descriptor class."""
-        self._fget = fget
-        self._fset = fset
-        self._fdel = fdel
-        self.__doc__ = doc
-
-    def __get__(self, obj, objtype=None):
-        """Return proxy or self."""
-        if obj is None:
-            return self
-        return self._proxy(obj, self._fget, self._fset, self._fdel)
-
-
-def _sort_from_cache(name, from_data=False):
-    def _sorter(item):
-        try:
-            cached_results = get_formatted_holdingpen_object(item)
-            if from_data:
-                # Get value from sort_data
-                return cached_results.get("sort_data", {}).get(name)
-            else:
-                return cached_results.get(name)
-        except Exception:
-            current_app.logger.exception(
-                "Invalid format for object {0}: {1}".format(
-                    item.id,
-                    cache.get("workflows_holdingpen_{0}".format(item.id))
-                )
-            )
-    return _sorter
-
-
-def sort_bwolist(bwolist, sort_key):
-    """Sort a list of workflow objects for the list."""
-    if sort_key == "newest":
-        bwolist.sort(key=attrgetter("created"), reverse=True)
-    elif sort_key == "oldest":
-        bwolist.sort(key=attrgetter("created"), reverse=False)
-    elif sort_key == "updated":
-        bwolist.sort(key=attrgetter("modified"), reverse=True)
-    elif sort_key == "least_updated":
-        bwolist.sort(key=attrgetter("modified"), reverse=False)
-    elif sort_key == "title":
-        bwolist.sort(key=_sort_from_cache("title"), reverse=False)
-    elif sort_key == "title_desc":
-        bwolist.sort(key=_sort_from_cache("title"), reverse=True)
-    else:
-        # Try a sort from sort_data
-        reverse = False
-        if sort_key.endswith("_desc"):
-            # Remove the suffix to get the correct data and set reverse
-            reverse = True
-            sort_key = sort_key[:-5]
-        bwolist.sort(key=_sort_from_cache(sort_key, from_data=True),
-                     reverse=reverse)
-    return bwolist
+from .proxies import current_workflows_ui
 
 
 def parse_bwids(bwolist):
@@ -184,22 +38,16 @@ def parse_bwids(bwolist):
 
 def get_formatted_holdingpen_object(bwo, date_format='%Y-%m-%d %H:%M:%S.%f'):
     """Return the formatted output, from cache if available."""
-    results = cache.get("workflows_holdingpen_{0}".format(bwo.id))
+    results = current_workflows_ui.get("row::{0}".format(bwo.id))
     if results:
-        results = msgpack.loads(
-            cache.get(
-                "workflows_holdingpen_{0}".format(
-                    bwo.id)))
+        results = msgpack.loads(results)
         if results["date"] == bwo.modified.strftime(date_format):
             return results
     results = generate_formatted_holdingpen_object(bwo)
     if results:
-        cache.set(
-            "workflows_holdingpen_{0}".format(bwo.id),
-            msgpack.dumps(results),
-            timeout=current_app.config.get(
-                "WORKFLOWS_HOLDING_PEN_CACHE_TIMEOUT"
-            )
+        current_workflows_ui.set(
+            "row::{0}".format(bwo.id),
+            msgpack.dumps(results)
         )
     return results
 
@@ -207,6 +55,8 @@ def get_formatted_holdingpen_object(bwo, date_format='%Y-%m-%d %H:%M:%S.%f'):
 def generate_formatted_holdingpen_object(
         bwo, date_format='%Y-%m-%d %H:%M:%S.%f'):
     """Generate a dict with formatted column data from Holding Pen object."""
+    from invenio_workflows import workflows
+
     from .definitions import WorkflowBase
 
     workflows_name = bwo.get_workflow_name()
@@ -218,7 +68,7 @@ def generate_formatted_holdingpen_object(
         workflow_definition = WorkflowBase
 
     action_name = bwo.get_action() or ""
-    action = actions.get(action_name, None)
+    action = current_workflows_ui.actions.get(action_name, None)
     mini_action = getattr(action, "render_mini", "")
     if mini_action:
         mini_action = action().render_mini(bwo)
@@ -235,27 +85,6 @@ def generate_formatted_holdingpen_object(
     return results
 
 
-def check_term_in_data(term_list, data):
-    """Check each term if present in data dictionary values.
-
-    :param term_list: list of tags used for filtering.
-    :type term_list: list
-
-    :param data: data to check.
-    :type data: dict
-
-    :return: True if all terms present, False otherwise.
-    """
-    total = 0
-    for term in term_list:
-        term = term.encode("utf-8")
-        for datum in data.values():
-            if datum and term.lower() in datum.lower():
-                total += 1
-                break
-    return total == len(term_list)
-
-
 def get_pretty_date(bwo):
     """Get the pretty date from bwo.created."""
     from invenio_utils.date import pretty_date
@@ -269,7 +98,7 @@ def get_type(bwo):
 
 def get_data_types():
     """Return a list of distinct data types from DbWorkflowObject."""
-    from .models import DbWorkflowObject
+    from invenio_workflows.models import DbWorkflowObject
     return [
         t[0] for t in DbWorkflowObject.query.with_entities(
             DbWorkflowObject.data_type
@@ -296,11 +125,11 @@ def get_action_list(object_list):
 
     # Get "real" action name only once per action
     for action_name in set(found_actions):
-        if action_name not in actions:
+        if action_name not in current_workflows_ui.actions:
             # Perhaps some old action? Use stored name.
             action_nicename = action_name
         else:
-            action = actions[action_name]
+            action = current_workflows_ui.actions[action_name]
             action_nicename = getattr(action, "name", action_name)
         action_dict[action_nicename] = found_actions.count(action_name)
     return action_dict
@@ -321,9 +150,7 @@ def get_rendered_task_results(obj):
 
 def get_rendered_row(obj_id):
     """Return a single formatted row."""
-    bwo = DbWorkflowObject.query.get(obj_id)
-    bwo.data = bwo.get_data()
-    bwo.extra_data = bwo.get_extra_data()
+    bwo = DbWorkflowObject.query.get(obj_id)  # noqa
     if not bwo:
         current_app.logger.error("workflow object not found for {0}".format(obj_id))
         return ""

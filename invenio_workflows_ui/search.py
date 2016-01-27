@@ -21,18 +21,13 @@
 
 from flask import current_app
 
-from invenio_base.globals import cfg
-from invenio_base.helpers import unicodifier
-
-from invenio_ext.es import es
-
 
 class Query(object):
     """Search engine implemetation."""
 
     def __init__(self, query, **kwargs):
         """Initialize with search query and other arguments."""
-        self.query = unicodifier(query)
+        self.query = query
         self.kwargs = kwargs
 
     def build(self, query):
@@ -98,8 +93,8 @@ def search(query, per_page, page, sort=None):
     """Return a slice of matched workflow object IDs and total hits."""
     params = {
         "query": query,
-        "index": cfg["WORKFLOWS_HOLDING_PEN_ES_PREFIX"] + "*",
-        "doc_type": current_app.config.get("WORKFLOWS_HOLDING_PEN_DOC_TYPE"),
+        "index": current_app.config.get("WORKFLOWS_HOLDING_PEN_ES_PREFIX", "") + "*",
+        "doc_type": current_app.config.get("WORKFLOWS_HOLDING_PEN_DOC_TYPE", "record"),
         "sort": sort or {},
         "size": min(per_page, 10000),
         "from": (page - 1) * min(per_page, 10000)
@@ -129,9 +124,18 @@ def get_holdingpen_objects(tags_list=None,
             "order": order
         }
     }
-    return search(
-        query=" {0} ".format(operator).join(tags_list),
-        per_page=per_page,
-        page=page,
-        sort=sorting
-    )
+    #return search(
+    #    query=" {0} ".format(operator).join(tags_list),
+    #    per_page=per_page,
+    #    page=page,
+    #    sort=sorting
+    #)
+    from invenio_workflows.models import DbWorkflowObject
+    ids = [
+        t[0] for t in DbWorkflowObject.query.with_entities(
+            DbWorkflowObject.id
+        ).distinct(
+            DbWorkflowObject.id
+        )
+    ]
+    return ids, DbWorkflowObject.query.count()

@@ -58,9 +58,15 @@ from flask_login import login_required
 from invenio_workflows.api import continue_oid_delayed, start_delayed
 from invenio_workflows.models import DbWorkflowObject, ObjectStatus, Workflow
 
+from .search import get_holdingpen_objects
+from .utils import (
+    get_rows,
+    get_data_types,
+)
+
+
 #from ..acl import viewholdingpen
 #from ..registry import actions
-#from ..search import get_holdingpen_objects
 #from ..utils import (
 #    alert_response_wrapper,
 #    get_data_types,
@@ -77,6 +83,43 @@ blueprint = Blueprint(
     template_folder='templates',
     static_folder='static',
 )
+
+# FIXME Replace or move to another place
+class Pagination(object):
+    """Helps with rendering pagination list."""
+
+    def __init__(self, page, per_page, total_count):
+        self.page = page
+        self.per_page = per_page
+        self.total_count = total_count
+
+    @property
+    def pages(self):
+        """Returns number of pages."""
+        return int(ceil(self.total_count / float(self.per_page)))
+
+    @property
+    def has_prev(self):
+        """Returns true if it has previous page."""
+        return self.page > 1
+
+    @property
+    def has_next(self):
+        """Returns true if it has next page."""
+        return self.page < self.pages
+
+    def iter_pages(self, left_edge=1, left_current=1,
+                   right_current=3, right_edge=1):
+        last = 0
+        for num in xrange(1, self.pages + 1):
+            if num <= left_edge or \
+               (num > self.page - left_current - 1 and
+                num < self.page + right_current) or \
+               num > self.pages - right_edge:
+                if last + 1 != num:
+                    yield None
+                yield num
+                last = num
 
 # TODO Could we avoid having Yet Another Mapping?
 HOLDINGPEN_WORKFLOW_STATES = {
@@ -210,7 +253,7 @@ def list_objects(tags_slug=None):
         'per_page', session.get('holdingpen_per_page', 25)
     )
     return render_template(
-        'workflows/list.html',
+        'invenio_workflows_ui/list.html',
         tags=json.dumps(tags_to_print),
         total=get_holdingpen_objects(
             tags_list=tags, per_page=per_page, page=page, sort_key=sort_key
