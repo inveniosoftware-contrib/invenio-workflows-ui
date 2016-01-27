@@ -24,11 +24,11 @@ define(
   ],
   function(
     $,
-    defineComponent) {
+    flight) {
 
     "use strict";
 
-    return defineComponent(ApprovalAction);
+    return flight.component(ApprovalAction);
 
     /**
     * .. js:class:: ApprovalAction()

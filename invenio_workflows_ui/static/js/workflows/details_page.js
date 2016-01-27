@@ -24,11 +24,11 @@ define(
   ],
   function(
     $,
-    defineComponent) {
+    flight) {
 
     "use strict";
 
-    return defineComponent(DetailsPage);
+    return flight.component(DetailsPage);
 
     function DetailsPage() {
       this.attributes({

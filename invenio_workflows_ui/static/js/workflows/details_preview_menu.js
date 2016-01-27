@@ -26,9 +26,9 @@ define(
   ],
   function(
     $,
-    defineComponent) {
+    flight) {
 
-    return defineComponent(DetailsPreviewMenu);
+    return flight.component(DetailsPreviewMenu);
 
     /**
     * .. js:class:: DetailsPreviewMenu()

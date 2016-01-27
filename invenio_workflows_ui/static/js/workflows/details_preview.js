@@ -27,10 +27,10 @@ define(
   ],
   function(
     $,
-    defineComponent,
+    flight,
     Prism) {
 
-    return defineComponent(DetailsPreview);
+    return flight.component(DetailsPreview);
 
     /**
     * .. js:class:: DetailsPreview()

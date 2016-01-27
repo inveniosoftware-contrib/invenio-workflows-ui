@@ -24,7 +24,7 @@ from __future__ import unicode_literals
 from invenio_assets import NpmBundle
 
 js = NpmBundle(
-    'js/workflows/maintable.js',
+    'js/workflows/init.js',
     filters='requirejs',
     output='gen/workflows.%(version)s.js',
     npm={
