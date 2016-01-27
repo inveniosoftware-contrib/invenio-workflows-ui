@@ -26,12 +26,11 @@ define(
   ],
   function(
     $,
-    defineComponent,
-    tpl_pagination) {
+    flight) {
 
     'use strict';
 
-    return defineComponent(HoldingPenPagination);
+    return flight.component(HoldingPenPagination);
 
     /**
     * .. js:class:: HoldingPen()

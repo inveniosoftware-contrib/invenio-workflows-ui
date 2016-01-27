@@ -85,6 +85,7 @@ blueprint = Blueprint(
 )
 
 # FIXME Replace or move to another place
+from math import ceil
 class Pagination(object):
     """Helps with rendering pagination list."""
 

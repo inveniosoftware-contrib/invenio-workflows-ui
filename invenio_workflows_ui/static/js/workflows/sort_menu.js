@@ -25,11 +25,11 @@ define(
   ],
   function(
     $,
-    defineComponent) {
+    flight) {
 
     'use strict';
 
-    return defineComponent(HoldingPenSort);
+    return flight.component(HoldingPenSort);
 
     /**
     * .. js:class:: HoldingPenSort()

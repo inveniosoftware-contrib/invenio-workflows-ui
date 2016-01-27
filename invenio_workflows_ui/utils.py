@@ -27,6 +27,8 @@ import msgpack
 
 from six import text_type
 
+from invenio_workflows.models import DbWorkflowObject
+
 from .proxies import current_workflows_ui
 
 
@@ -98,7 +100,6 @@ def get_type(bwo):
 
 def get_data_types():
     """Return a list of distinct data types from DbWorkflowObject."""
-    from invenio_workflows.models import DbWorkflowObject
     return [
         t[0] for t in DbWorkflowObject.query.with_entities(
             DbWorkflowObject.data_type
@@ -156,7 +157,7 @@ def get_rendered_row(obj_id):
         return ""
     preformatted = get_formatted_holdingpen_object(bwo)
     return render_template(
-        'workflows/list_row.html',
+        'invenio_workflows_ui/list_row.html',
         title=preformatted.get("title", ""),
         object=bwo,
         action=preformatted.get("action", ""),

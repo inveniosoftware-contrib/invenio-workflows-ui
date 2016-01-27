@@ -27,11 +27,11 @@ define(
   function(
     $,
     tagsinput,
-    defineComponent) {
+    flight) {
 
     'use strict';
 
-    return defineComponent(HoldingPenTags);
+    return flight.component(HoldingPenTags);
 
     /**
     * .. js:class:: HoldingPenTags()

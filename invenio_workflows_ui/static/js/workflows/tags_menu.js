@@ -26,9 +26,9 @@ define(
   ],
   function(
     $,
-    defineComponent) {
+    flight) {
 
-    return defineComponent(HoldingPenTagsMenu);
+    return flight.component(HoldingPenTagsMenu);
 
     /**
     * .. js:class:: HoldingPenTagsMenu()

@@ -25,11 +25,11 @@ define(
   ],
   function(
     $,
-    defineComponent) {
+    flight) {
 
     "use strict";
 
-    return defineComponent(HoldingPenUrlUpdater);
+    return flight.component(HoldingPenUrlUpdater);
 
     function HoldingPenUrlUpdater() {
 

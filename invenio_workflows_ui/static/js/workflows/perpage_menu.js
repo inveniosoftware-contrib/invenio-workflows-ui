@@ -25,11 +25,11 @@ define(
   ],
   function(
     $,
-    defineComponent) {
+    flight) {
 
     'use strict';
 
-    return defineComponent(HoldingPenPerPage);
+    return flight.component(HoldingPenPerPage);
 
     /**
     * .. js:class:: HoldingPenPerPage()

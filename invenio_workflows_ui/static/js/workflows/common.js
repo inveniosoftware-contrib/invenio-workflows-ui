@@ -26,12 +26,12 @@ define(
   ],
   function(
     $,
-    defineComponent,
+    flight,
     tpl_alert) {
 
     "use strict";
 
-    return defineComponent(HoldingPenCommon);
+    return flight.component(HoldingPenCommon);
 
     /**
     * .. js:class:: HoldingPenCommon()
