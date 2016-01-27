@@ -22,11 +22,14 @@ define(
   [
     'jquery',
     'node_modules/flightjs/build/flight.js',
-    //'hgn!js/workflows/templates/pagination'
+    'node_modules/hogans/node_modules/hogan.js/dist/hogan-3.0.2.amd',
+    'node_modules/requirejs-hogan-plugin/text!js/workflows/templates/pagination.mustache'
   ],
   function(
     $,
-    flight) {
+    flight,
+    hogans,
+    tpl_pagination_src) {
 
     'use strict';
 
@@ -53,7 +56,7 @@ define(
             "prev": data.pagination.page - 1,
             "iter_pages": data.pagination.iter_pages
           };
-          this.$node.html(tpl_pagination(pagination_data));
+          this.$node.html(hogans.compile(tpl_pagination_src).render(pagination_data));
         } else {
           this.$node.html("");
         }

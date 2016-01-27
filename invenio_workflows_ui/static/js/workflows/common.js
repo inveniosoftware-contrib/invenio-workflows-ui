@@ -22,12 +22,14 @@ define(
   [
     'jquery',
     'node_modules/flightjs/build/flight.js',
-    //'js/workflows/templates/alert.mustache'
+    'node_modules/hogans/node_modules/hogan.js/dist/hogan-3.0.2.amd',
+    'node_modules/requirejs-hogan-plugin/text!js/workflows/templates/alert.mustache'
   ],
   function(
     $,
     flight,
-    tpl_alert) {
+    hogans,
+    tpl_alert_src) {
 
     "use strict";
 
@@ -48,7 +50,7 @@ define(
       });
 
       this.setAlertMessage = function (ev, data) {
-        $(this.attr.alertSelector).html(tpl_alert({
+        $(this.attr.alertSelector).html(hogans.compile(tpl_alert_src).render({
           category: data.category,
           message: data.message
         }));

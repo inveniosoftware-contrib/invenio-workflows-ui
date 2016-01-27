@@ -31,7 +31,8 @@ js = NpmBundle(
         "bootstrap-tagsinput": "git://github.com/inspirehep/bootstrap-tagsinput.git#master",
         "prismjs": "latest",
         "flightjs": "latest",
-        "hogans": "latest"
+        "hogans": "latest",
+        "requirejs-hogan-plugin": "latest"
     }
 )
 
