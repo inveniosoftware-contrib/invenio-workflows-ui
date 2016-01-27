@@ -21,18 +21,18 @@
 
   <a class="list-group-item list-group-item-{% if completed %}success{% else %}info{% endif %}"  href="#" data-toggle="modal" data-target="#infoModal{{id}}">
     <span class="glyphicon glyphicon-{% if completed %}ok-sign{% else %}question-sign{% endif %}"></span>
-    {{ nicename|u }}
+    {{ nicename }}
   </a>
   <div class="modal fade" id="infoModal{{id}}" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
           <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-          <h4 class="modal-title" id="myModalLabel">{{ name|u }}</h4>
+          <h4 class="modal-title" id="myModalLabel">{{ name }}</h4>
         </div>
         <div class="modal-body">
           {% if doc %}
-            {{ doc|u }}
+            {{ doc }}
           {% else %}
             {{ _("Documentation unavailable") }}
           {% endif %}
@@ -41,7 +41,7 @@
             <h5>{{ _("Parameters") }}:</h5>
             <ul class='list-unstyled'>
               {% for name, value in parameters %}
-                <li><strong>{{ name|u }}:</strong> {{ value|u }}</li>
+                <li><strong>{{ name }}:</strong> {{ value }}</li>
               {% endfor %}
             </ul>
           {% endif %}
@@ -55,17 +55,15 @@
 
 {%- endmacro %}
 
-{% macro display_workflow_definition(workflow_definition, id) -%}
+{% macro display_workflow_definition(workflow_definition) -%}
   <div class="list-group">
     {% for item in workflow_definition %}
       {% if item is mapping %}
-        {{  display_task(item.get("nicename"), item.get("doc"), item.get("parameters"), item.get("name"), id|length, false)  }}
-        {% do id.append(1) %}
+        {{ display_task(item.get("nicename"), item.get("doc"), item.get("parameters"), item.get("name"), loop.index, false)  }}
       {% else %}
         </div>
         <div class="list-group">
-          {{ display_workflow_definition(item, id) }}
-          {% do id.append(1) %}
+          {{ display_workflow_definition(item, loop.index) }}
         </div>
         <div class="list-group">
       {% endif %}
