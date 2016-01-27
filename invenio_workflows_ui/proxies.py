@@ -27,3 +27,7 @@ from werkzeug.local import LocalProxy
 current_workflows_ui = LocalProxy(
     lambda: current_app.extensions['invenio-workflows-ui']
 )
+
+actions = LocalProxy(
+    lambda: current_app.extensions['invenio-workflows-ui'].actions
+)

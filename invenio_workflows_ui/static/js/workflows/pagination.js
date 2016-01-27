@@ -22,7 +22,7 @@ define(
   [
     'jquery',
     'node_modules/flightjs/build/flight.js',
-    'node_modules/hogans/node_modules/hogan.js/dist/hogan-3.0.2.amd',
+    'node_modules/hogan.js/dist/hogan-3.0.2.amd',
     'node_modules/requirejs-hogan-plugin/text!js/workflows/templates/pagination.mustache'
   ],
   function(

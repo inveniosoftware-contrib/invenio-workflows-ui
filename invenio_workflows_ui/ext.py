@@ -76,7 +76,7 @@ class _WorkflowsUIState(object):
     def load_entry_point_group(self, entry_point_group):
         """Load actions from an entry point group."""
         for ep in pkg_resources.iter_entry_points(group=entry_point_group):
-            self.register_action(ep.load())
+            self.register_action(ep.name, ep.load())
 
 
 class InvenioWorkflowsUI(object):

@@ -16,16 +16,17 @@
 # along with Invenio; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 #}
-{% extends "page.html" %}
+{%- extends config.INVENIO_WORKFLOWS_UI_BASE_TEMPLATE %}
 
-{% block body %}
+{% block page_body %}
+    {{ super() }}
 
-  <div id="alert-message"></div>
+    {% block hpbody %}
+    {% endblock %}
+    {% block hpmodal %}
+    {% endblock %}
 
-  {% block hpbody %}
-  {% endblock %}
-
-  {% block hpmodal %}
-  {% endblock %}
 
 {% endblock %}
+
+

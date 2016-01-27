@@ -58,22 +58,22 @@ from flask_login import login_required
 from invenio_workflows.api import continue_oid_delayed, start_delayed
 from invenio_workflows.models import DbWorkflowObject, ObjectStatus, Workflow
 
+from .proxies import actions
+
 from .search import get_holdingpen_objects
 from .utils import (
     get_rows,
     get_data_types,
+    get_rendered_task_results,
+    get_previous_next_objects,
+    alert_response_wrapper
 )
 
 
-#from ..acl import viewholdingpen
-#from ..registry import actions
-#from ..utils import (
-#    alert_response_wrapper,
-#    get_data_types,
-#    get_previous_next_objects,
-#    get_rendered_task_results,
-#    get_rows
-#)
+
+#
+#
+# from ..acl import viewholdingpen
 
 
 blueprint = Blueprint(
@@ -161,13 +161,14 @@ def index():
     Acts as a hub for catalogers (may be removed)
     """
     # TODO: Add user filtering
-    #error_state_total = get_holdingpen_objects(
-    #    tags_list=[ObjectStatus.labels[ObjectStatus.ERROR.value]]
-    #)[1]
-    #halted_state_total = get_holdingpen_objects(
-#        tags_list=[ObjectStatus.labels[ObjectStatus.HALTED.value]]
-#    )[1]
-    return render_template('invenio_workflows_ui/index.html')
+    error_state_total = get_holdingpen_objects(
+       tags_list=[ObjectStatus.labels[ObjectStatus.ERROR.value]]
+    )[1]
+    halted_state_total = get_holdingpen_objects(
+       tags_list=[ObjectStatus.labels[ObjectStatus.HALTED.value]]
+   )[1]
+    return render_template('invenio_workflows_ui/index.html',error_state_total=error_state_total,
+                           halted_state_total=halted_state_total)
 
 
 @blueprint.route('/load', methods=['GET', 'POST'])
@@ -186,6 +187,7 @@ def load(page=1, per_page=0, sort_key="modified"):
     ids, total = get_holdingpen_objects(
         tags_list=tags, per_page=per_page, page=page, sort_key=sort_key
     )
+
     current_app.logger.debug("Total hits: {0}".format(ids))
     current_app.logger.debug(ids)
 
@@ -294,7 +296,7 @@ def details(objectid):
         bwobject=bwobject,
         rendered_actions=rendered_actions,
         data_preview=formatted_data,
-        workflow_name=bwobject.get_workflow_name(),
+        workflow_name=bwobject.get_workflow_name() or "",
         task_results=results,
         previous_object=previous_object,
         next_object=next_object,
@@ -348,7 +350,7 @@ def get_file_from_object(object_id=None, filename=None):
 @blueprint.route('/restart_record', methods=['GET', 'POST'])
 #@login_required
 #@permission_required(viewholdingpen.name)
-#@alert_response_wrapper
+@alert_response_wrapper
 def restart_record(objectid=None, start_point='continue_next'):
     """Restart the initial object in its workflow."""
     bwobject = DbWorkflowObject.query.get_or_404(objectid)
@@ -376,12 +378,13 @@ def continue_record(objectid=None):
     ))
 
 
-@blueprint.route('/restart_record_prev', methods=['GET', 'POST'])
 #@login_required
 #@permission_required(viewholdingpen.name)
-#@alert_response_wrapper
-def restart_record_prev(objectid=None):
+@blueprint.route('/restart_record_prev/', methods=['GET', 'POST'])
+@alert_response_wrapper
+def restart_record_prev():
     """Restart the last task for current object."""
+    objectid = request.form["objectid"]
     continue_oid_delayed(oid=objectid, start_point="restart_task")
     return jsonify(dict(
         category="success",
@@ -393,8 +396,9 @@ def restart_record_prev(objectid=None):
 #@login_required
 #@permission_required(viewholdingpen.name)
 #@alert_response_wrapper
-def delete_from_db(objectid=None):
+def delete_from_db():
     """Delete the object from the db."""
+    objectid = request.form["objectid"]
     DbWorkflowObject.delete(objectid)
     return jsonify(dict(
         category="success",
@@ -405,10 +409,11 @@ def delete_from_db(objectid=None):
 @blueprint.route('/delete_multi', methods=['GET', 'POST'])
 #@login_required
 #@permission_required(viewholdingpen.name)
-#@alert_response_wrapper
-def delete_multi(bwolist=None):
+@alert_response_wrapper
+def delete_multi():
     """Delete list of objects from the db."""
-    from ..utils import parse_bwids
+    from .utils import parse_bwids
+    bwolist = request.form["bwolist"]
     bwolist = parse_bwids(bwolist)
     for objectid in bwolist:
         delete_from_db(objectid)
@@ -455,8 +460,10 @@ def resolve_action():
 @blueprint.route('/entry_data_preview', methods=['GET', 'POST'])
 #@login_required
 #@permission_required(viewholdingpen.name)
-def entry_data_preview(objectid=None, of=None):
+def entry_data_preview():
     """Present the data in a human readble form or in xml code."""
+    objectid = request.form["objectid"]
+    of = request.form["of"]
     bwobject = DbWorkflowObject.query.get_or_404(objectid)
     if not bwobject:
         flash("No object found for %s" % (objectid,))
