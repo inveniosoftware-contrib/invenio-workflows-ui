@@ -21,8 +21,8 @@
 define(
   [
     'jquery',
-    'flight/lib/component',
-    'hgn!js/workflows/templates/alert'
+    'node_modules/flightjs/build/flight.js',
+    //'js/workflows/templates/alert.mustache'
   ],
   function(
     $,

@@ -21,32 +21,28 @@
 
 from __future__ import unicode_literals
 
-from invenio_base.bundles import invenio as _i, jquery as _j
+from invenio_assets import NpmBundle
 
-from invenio_ext.assets import Bundle, CleanCSSFilter, RequireJSFilter
-
-
-js = Bundle(
+js = NpmBundle(
     'js/workflows/init.js',
-    filters=RequireJSFilter(exclude=[_j, _i]),
-    output='workflows.js',
-    weight=50,
-    bower={
+    filters='requirejs',
+    output='gen/workflows.%(version)s.js',
+    npm={
         "bootstrap-tagsinput": "git://github.com/inspirehep/bootstrap-tagsinput.git#master",
-        "prism": "gh-pages",
-        "flight": "latest"
+        "prismjs": "latest",
+        "flightjs": "latest",
+        "hogans": "latest"
     }
 )
 
-css = Bundle(
-    'vendors/prism/themes/prism.css',
-    'vendors/bootstrap-tagsinput/src/bootstrap-tagsinput.css',
+css = NpmBundle(
+    'node_modules/prismjs/themes/prism.css',
+    'node_modules/bootstrap-tagsinput/dist/bootstrap-tagsinput.css',
     'css/workflows/workflows.css',
-    filters=CleanCSSFilter(),
-    output='workflows.css',
-    weight=30,
-    bower={
+    filters='scss, cleancss',
+    output='gen/workflows.%(version)s.css',
+    npm={
         "bootstrap-tagsinput": "git://github.com/inspirehep/bootstrap-tagsinput.git#master",
-        "prism": "gh-pages"
+        "prismjs": "latest"
     }
 )

@@ -22,8 +22,8 @@
 define(
   [
     'jquery',
-    'flight/lib/component',
-    'prism'
+    'node_modules/flightjs/build/flight.js',
+    "node_modules/prismjs/prism.js",
   ],
   function(
     $,

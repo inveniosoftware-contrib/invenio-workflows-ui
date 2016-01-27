@@ -21,8 +21,8 @@
 define(
   [
     'jquery',
-    'bootstrap-tagsinput',
-    'flight/lib/component'
+    "node_modules/bootstrap-tagsinput/dist/bootstrap-tagsinput.js",
+    'node_modules/flightjs/build/flight.js'
   ],
   function(
     $,

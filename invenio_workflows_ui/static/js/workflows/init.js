@@ -20,8 +20,8 @@
 require(
   [
     "jquery",
-    "bootstrap-tagsinput",
-    "prism",
+    "node_modules/bootstrap-tagsinput/dist/bootstrap-tagsinput.js",
+    "node_modules/prismjs/prism.js",
     "js/workflows/common",
     "js/workflows/maintable",
     "js/workflows/holdingpen",
