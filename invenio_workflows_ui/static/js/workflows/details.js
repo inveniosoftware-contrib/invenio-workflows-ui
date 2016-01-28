@@ -19,6 +19,7 @@
 
 define(
   [
+
      "js/workflows/common",
      "js/workflows/details_actions",
      "js/workflows/details_actions_buttons",
@@ -40,7 +41,7 @@ define(
       HoldingPenCommon.attachTo(document);
       DetailsPreview.attachTo(document, {
         preview_url: context.preview_url,
-        id_object: context.id_object,
+        id_object: context.id_object
       });
       DetailsPreviewMenu.attachTo("#object-preview");
       DetailsActions.attachTo(document, {

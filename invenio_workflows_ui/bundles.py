@@ -32,7 +32,7 @@ js = NpmBundle(
         "prismjs": "latest",
         "flightjs": "latest",
         "hogans": "latest",
-        "requirejs-hogan-plugin": "latest"
+        "requirejs-hogan-plugin": "latest",
     }
 )
 
@@ -44,6 +44,6 @@ css = NpmBundle(
     output='gen/workflows.%(version)s.css',
     npm={
         "bootstrap-tagsinput": "git://github.com/inspirehep/bootstrap-tagsinput.git#master",
-        "prismjs": "latest"
+        "prismjs": "latest",
     }
 )

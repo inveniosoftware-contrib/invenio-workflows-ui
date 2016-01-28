@@ -25,8 +25,8 @@ from invenio_base.globals import cfg
 
 from sqlalchemy.event import listen
 
-from .models import DbWorkflowObject
-from .signals import workflow_object_saved
+from invenio_workflows.models import DbWorkflowObject
+from invenio_workflows.signals import workflow_object_saved
 
 
 def delete_from_index(mapper, connection, target):
@@ -49,7 +49,7 @@ def delete_from_index(mapper, connection, target):
         )
 
 
-# @workflow_object_saved.connect
+@workflow_object_saved.connect
 def index_holdingpen_record(sender, **kwargs):
     """Index a Holding Pen record."""
     from invenio_ext.es import es
