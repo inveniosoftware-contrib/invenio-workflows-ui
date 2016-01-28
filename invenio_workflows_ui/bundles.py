@@ -21,11 +21,14 @@
 
 from __future__ import unicode_literals
 
-from invenio_assets import NpmBundle
+# FIXME We do not really know which theme we use
+from invenio_theme.bundles import js as _js
+
+from invenio_assets import NpmBundle, RequireJSFilter
 
 js = NpmBundle(
     'js/workflows/init.js',
-    filters='requirejs',
+    filters=RequireJSFilter(exclude=[_js.contents[1]]),
     output='gen/workflows.%(version)s.js',
     npm={
         "bootstrap-tagsinput": "git://github.com/inspirehep/bootstrap-tagsinput.git#master",
