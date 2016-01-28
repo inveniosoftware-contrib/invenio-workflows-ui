@@ -58,7 +58,7 @@ from flask_login import login_required
 from invenio_workflows.api import continue_oid_delayed, start_delayed
 from invenio_workflows.models import DbWorkflowObject, ObjectStatus, Workflow
 
-#from .proxies import actions
+from .proxies import actions
 
 from .search import get_holdingpen_objects
 from .utils import (
