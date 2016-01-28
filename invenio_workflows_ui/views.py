@@ -52,7 +52,7 @@ from flask import (
 )
 
 from flask_babelex import gettext as _
-
+from flask.ext.celeryext import create_celery_app
 from flask_login import login_required
 
 from invenio_workflows.api import continue_oid_delayed, start_delayed
@@ -431,6 +431,7 @@ def resolve_action():
 
     Will call the resolve() function of the specific action.
     """
+    create_celery_app(current_app)
     objectids = request.values.getlist('objectids[]') or []
     ids_resolved = 0
 
