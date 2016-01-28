@@ -19,33 +19,69 @@
 
 """Various utility functions for use across the workflows module."""
 
-from functools import wraps
+from __future__ import absolute_import, print_function
 
-from flask import current_app, jsonify, render_template
+from flask import current_app, jsonify, render_template, session
 
 import msgpack
 
-from six import text_type
+from math import ceil
 
-from invenio_workflows.models import DbWorkflowObject
+from six import text_type, string_types
+
+from werkzeug import import_string
+
+from invenio_workflows.models import WorkflowObject
 
 from .proxies import current_workflows_ui
 
 
-def parse_bwids(bwolist):
-    """Use ast to eval a string representing a list."""
-    import ast
-    return list(ast.literal_eval(bwolist))
+
+class Pagination(object):
+    """Helps with rendering pagination list."""
+
+    def __init__(self, page, per_page, total_count):
+        self.page = page
+        self.per_page = per_page
+        self.total_count = total_count
+
+    @property
+    def pages(self):
+        """Returns number of pages."""
+        return int(ceil(self.total_count / float(self.per_page)))
+
+    @property
+    def has_prev(self):
+        """Returns true if it has previous page."""
+        return self.page > 1
+
+    @property
+    def has_next(self):
+        """Returns true if it has next page."""
+        return self.page < self.pages
+
+    def iter_pages(self, left_edge=1, left_current=1,
+                   right_current=3, right_edge=1):
+        last = 0
+        for num in xrange(1, self.pages + 1):
+            if num <= left_edge or \
+               (num > self.page - left_current - 1 and
+                num < self.page + right_current) or \
+               num > self.pages - right_edge:
+                if last + 1 != num:
+                    yield None
+                yield num
+                last = num
 
 
-def get_formatted_holdingpen_object(bwo, date_format='%Y-%m-%d %H:%M:%S.%f'):
+def get_formatted_workflow_object(bwo, date_format='%Y-%m-%d %H:%M:%S.%f'):
     """Return the formatted output, from cache if available."""
     results = current_workflows_ui.get("row::{0}".format(bwo.id))
     if results:
         results = msgpack.loads(results)
         if results["date"] == bwo.modified.strftime(date_format):
             return results
-    results = generate_formatted_holdingpen_object(bwo)
+    results = generate_formatted_workflow_object(bwo)
     if results:
         current_workflows_ui.set(
             "row::{0}".format(bwo.id),
@@ -54,9 +90,9 @@ def get_formatted_holdingpen_object(bwo, date_format='%Y-%m-%d %H:%M:%S.%f'):
     return results
 
 
-def generate_formatted_holdingpen_object(
+def generate_formatted_workflow_object(
         bwo, date_format='%Y-%m-%d %H:%M:%S.%f'):
-    """Generate a dict with formatted column data from Holding Pen object."""
+    """Generate a dict with formatted column data from workflows UI object."""
     from invenio_workflows import workflows
 
     from .definitions import WorkflowBase
@@ -87,77 +123,22 @@ def generate_formatted_holdingpen_object(
     return results
 
 
-def get_pretty_date(bwo):
-    """Get the pretty date from bwo.created."""
-    from invenio_utils.date import pretty_date
-    return pretty_date(bwo.created)
-
-
-def get_type(bwo):
-    """Get the type of the Object."""
-    return bwo.data_type
-
-
 def get_data_types():
-    """Return a list of distinct data types from DbWorkflowObject."""
-    return [
-        t[0] for t in DbWorkflowObject.query.with_entities(
-            DbWorkflowObject.data_type
-        ).distinct(
-            DbWorkflowObject.data_type
-        )
-    ]
-
-
-def get_action_list(object_list):
-    """Return a dict of action names mapped to halted objects.
-
-    Get a dictionary mapping from action name to number of Pending
-    actions (i.e. halted objects). Used in the holdingpen.index page.
-    """
-    action_dict = {}
-    found_actions = []
-
-    # First get a list of all to count up later
-    for bwo in object_list:
-        action_name = bwo.get_action()
-        if action_name is not None:
-            found_actions.append(action_name)
-
-    # Get "real" action name only once per action
-    for action_name in set(found_actions):
-        if action_name not in current_workflows_ui.actions:
-            # Perhaps some old action? Use stored name.
-            action_nicename = action_name
-        else:
-            action = current_workflows_ui.actions[action_name]
-            action_nicename = getattr(action, "name", action_name)
-        action_dict[action_nicename] = found_actions.count(action_name)
-    return action_dict
-
-
-def get_rendered_task_results(obj):
-    """Return a list of rendered results from DbWorkflowObject task results."""
-    results = {}
-    for name, res in obj.get_tasks_results().items():
-        for result in res:
-            results[name] = render_template(
-                result.get("template", "workflows/results/default.html"),
-                results=result,
-                obj=obj
-            )
-    return results
+    """Return a list of distinct data types from WorkflowObject."""
+    return list(
+        current_app.config.get('WORKFLOWS_UI_DATA_TYPES', dict()).keys()
+    )
 
 
 def get_rendered_row(obj_id):
     """Return a single formatted row."""
-    bwo = DbWorkflowObject.query.get(obj_id)  # noqa
+    bwo = WorkflowObject.query.get(obj_id)  # noqa
     if not bwo:
         current_app.logger.error("workflow object not found for {0}".format(obj_id))
         return ""
-    preformatted = get_formatted_holdingpen_object(bwo)
+    preformatted = get_formatted_workflow_object(bwo)
     return render_template(
-        'invenio_workflows_ui/list_row.html',
+        current_app.config["WORKFLOWS_UI_LIST_ROW_TEMPLATE"],
         title=preformatted.get("title", ""),
         object=bwo,
         action=preformatted.get("action", ""),
@@ -166,14 +147,16 @@ def get_rendered_row(obj_id):
     )
 
 
-def get_rows(id_list):
+def get_rows(results):
     """Return all rows formatted."""
+    id_list = [hit["_id"] for hit in results['hits']['hits']]
+    session['workflows_ui_current_ids'] = id_list
     return [get_rendered_row(bid)
             for bid in id_list]
 
 
 def get_previous_next_objects(object_list, current_object_id):
-    """Return tuple of (previous, next) object for given Holding Pen object."""
+    """Return tuple of (previous, next) object for given workflows UI object."""
     if not object_list:
         return None, None
     try:
@@ -193,16 +176,6 @@ def get_previous_next_objects(object_list, current_object_id):
     except IndexError:
         previous_object_id = None
     return previous_object_id, next_object_id
-
-
-def get_task_history(last_task):
-    """Append last task to task history."""
-    if hasattr(last_task, 'branch') and last_task.branch:
-        return
-    elif hasattr(last_task, 'hide') and last_task.hide:
-        return
-    else:
-        return get_func_info(last_task)
 
 
 def get_func_info(func):
@@ -247,16 +220,10 @@ def get_workflow_info(func_list):
     return funcs
 
 
-def alert_response_wrapper(func):
-    """Wrap given function with wrapper to return JSON for alerts."""
-    @wraps(func)
-    def inner(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except Exception as error:
-            current_app.logger.exception(error)
-            return jsonify({
-                "category": "danger",
-                "message": "Error: {0}".format(error)
-            })
-    return inner
+def obj_or_import_string(value, default=None):
+    """Import string or return object."""
+    if isinstance(value, string_types):
+        return import_string(value)
+    elif value:
+        return value
+    return default

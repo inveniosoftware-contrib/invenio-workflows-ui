@@ -21,7 +21,7 @@
 define(
   [
     'jquery',
-    'node_modules/flightjs/build/flight.js'
+    'flight'
   ],
   function(
     $,
@@ -29,17 +29,17 @@ define(
 
     "use strict";
 
-    return flight.component(HoldingPenSelection);
+    return flight.component(WorkflowsUISelection);
 
     /**
-    * .. js:class:: HoldingPenSelection()
+    * .. js:class:: WorkflowsUISelection()
     *
-    * Selection utilities throughout Holding Pen.
+    * Selection utilities throughout workflows UI.
     *
     * :param string alertSelector:
     *
     */
-    function HoldingPenSelection() {
+    function WorkflowsUISelection() {
 
       this.attributes({
           selectedIDs: [],

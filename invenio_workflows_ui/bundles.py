@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2014, 2015 CERN.
+# Copyright (C) 2016 CERN.
 #
 # Invenio is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -19,31 +19,65 @@
 
 """Workflows bundles."""
 
-from __future__ import unicode_literals
+from __future__ import absolute_import, print_function
 
-from invenio_assets import NpmBundle
+from flask_assets import Bundle
 
-js = NpmBundle(
+from invenio_assets import NpmBundle, RequireJSFilter
+
+from werkzeug.local import LocalProxy
+
+# NOTE:
+# Here we exclude base JS bundles like jQuery etc. so that there does
+# not exist several jQuery instances on the site.
+try:
+    from invenio_theme.bundles import js as _js
+    exclude_js = [_js.contents[1]]
+except ImportError:
+    from flask import current_app
+    try:
+        exclude_js = LocalProxy(
+            lambda: current_app.config['THEME_BASE_BUNDLES_EXCLUDE_JS']
+        )
+    except KeyError:
+        import warnings
+        warnings.warn(message=(
+            "You are missing THEME_BASE_BUNDLES_EXCLUDE_JS from "
+            "your configuration, which may cause you to have multiple instances"
+            "of libraries like jQuery on your site."
+        ))
+        exclude_js = []
+
+
+js_list = NpmBundle(
     'js/workflows/init.js',
-    filters='requirejs',
-    output='gen/workflows.%(version)s.js',
+    filters=RequireJSFilter(exclude=exclude_js),
+    output='gen/workflowsui.list.%(version)s.js',
     npm={
-        "bootstrap-tagsinput": "git://github.com/inspirehep/bootstrap-tagsinput.git#master",
-        "prismjs": "latest",
-        "flightjs": "latest",
-        "hogans": "latest",
-        "requirejs-hogan-plugin": "latest",
+        "prismjs": "~1.4.1",
+        "flightjs": "~1.5.0",
+        "hogan.js": "~3.0.2",
+        "requirejs-hogan-plugin": "~0.3.1",
+        "selectize": "0.12.1"
     }
 )
 
-css = NpmBundle(
+js_details = NpmBundle(
+    'js/workflows/details/init.js',
+    filters=RequireJSFilter(exclude=exclude_js),
+    output='gen/workflowsui.details.%(version)s.js',
+    npm={
+        "prismjs": "~1.4.1",
+        "flightjs": "~1.5.0",
+        "hogan.js": "~3.0.2",
+        "requirejs-hogan-plugin": "~0.3.1",
+    }
+)
+
+css = Bundle(
     'node_modules/prismjs/themes/prism.css',
-    'node_modules/bootstrap-tagsinput/dist/bootstrap-tagsinput.css',
+    'node_modules/selectize/dist/css/selectize.bootstrap3.css',
     'css/workflows/workflows.css',
     filters='scss, cleancss',
-    output='gen/workflows.%(version)s.css',
-    npm={
-        "bootstrap-tagsinput": "git://github.com/inspirehep/bootstrap-tagsinput.git#master",
-        "prismjs": "latest",
-    }
+    output='gen/workflowsui.%(version)s.css',
 )

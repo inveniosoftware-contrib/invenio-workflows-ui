@@ -1,6 +1,6 @@
 /*
  * This file is part of Invenio.
- * Copyright (C) 2015, 2016 CERN.
+ * Copyright (C) 2015 CERN.
  *
  * Invenio is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -17,7 +17,6 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
  */
 
-
 define(
   [
     'jquery',
@@ -27,37 +26,34 @@ define(
     $,
     flight) {
 
-    "use strict";
+    'use strict';
 
-    return flight.component(WorkflowsUIUrlUpdater);
+    return flight.component(DetailsActionsButtons);
 
-    function WorkflowsUIUrlUpdater() {
-
+    /**
+    * .. js:class:: DetailsActionsButtons()
+    *
+    * UI component for handling the buttons for restarting/deleting an object.
+    *
+    * :param string previewMenuItemSelector: DOM selector for each menu item
+    *
+    */
+    function DetailsActionsButtons() {
       this.attributes({
-        urlPrefix: ""
+        actionButtonSelector: ".details-action"
       });
 
-      this.updateUrlFromTags = function(ev, data) {
-        // Different states depending on the value
-        switch(data.search.length) {
-          case 0:
-            // history API accepts UNIX-like relative paths
-            this.replaceHistoryUrl('.');
-            break;
-          default:
-            this.replaceHistoryUrl(this.attr.urlPrefix + data.search);
-            break;
-        }
-      };
-
-      this.replaceHistoryUrl = function(url_state) {
-        history.replaceState({}, '', url_state);
+      this.triggerActionButton = function(ev, data) {
+        this.trigger(document, "detailsButtonClick", {
+          action: $(data.el).data("action")
+        });
       };
 
       this.after('initialize', function() {
-        this.on(document, "update_url", this.updateUrlFromTags);
-        $(document).trigger("updateTags");
-        console.log("Url Updater init");
+        this.on("click", {
+          actionButtonSelector: this.triggerActionButton
+        });
+        console.log("Details preview menu init");
       });
     }
-  });
+});

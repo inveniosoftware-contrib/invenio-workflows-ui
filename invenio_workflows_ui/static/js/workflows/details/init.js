@@ -1,6 +1,6 @@
 /*
  * This file is part of Invenio.
- * Copyright (C) 2015 CERN.
+ * Copyright (C) 2014, 2015 CERN.
  *
  * Invenio is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -17,35 +17,18 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
  */
 
-
-define(
+require(
   [
-    'jquery',
-    'flight',
+    "js/workflows/common",
+    "js/workflows/details/details",
+    "js/workflows/details/details_actions",
+    "js/workflows/details/details_actions_buttons",
   ],
-  function(
-    $,
-    flight) {
-
-    'use strict';
-
-    return flight.component(WorkflowsUIPerPage);
-
-    /**
-    * .. js:class:: WorkflowsUIPerPage()
-    *
-    * workflows UI per page dropdown.
-    *
-    */
-    function WorkflowsUIPerPage() {
-      this.changePerPage = function(ev, data) {
-        var per_page = $(ev.target).val();
-        this.trigger(document, "reloadWorkflowsUITable", {"per_page": per_page});
-      };
-
-      this.after('initialize', function() {
-        this.on("change", this.changePerPage);
-        console.log("Perpage init");
-      });
-    }
-});
+  function() {
+    // This file is simply here to make sure the above dependencies are
+    // properly loaded and ready to be used by inline scripts.
+    //
+    // Without it, we have to rely on non-anonymous modules.
+    console.info("js/workflows/init is loaded");
+  }
+);

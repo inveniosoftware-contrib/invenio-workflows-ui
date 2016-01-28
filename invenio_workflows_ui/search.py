@@ -17,99 +17,41 @@
 # along with Invenio; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 
-"""Search functions for Holding Pen interface."""
+"""Search functions for workflows UI interface."""
 
-from flask import current_app
+from __future__ import absolute_import, print_function
 
+from flask import request
 
-class Query(object):
-    """Search engine implemetation."""
+from invenio_search import current_search_client, Query
 
-    def __init__(self, query, **kwargs):
-        """Initialize with search query and other arguments."""
-        self.query = query
-        self.kwargs = kwargs
-
-    def build(self, query):
-        """Build engine query."""
-        if not query:
-            return {
-                "match_all": []
-            }
-        return {
-            "query_string": {
-                "query": query
-            }
-        }
-
-    def search(self, **kwargs):
-        """Search records."""
-        self.kwargs.update(kwargs)
-        return Results(query=self.build(self.query), **self.kwargs)
+from .utils import obj_or_import_string
 
 
-class Results(object):
-    """Search results wrapper."""
+def default_query_factory(index, page, size, query_string=None):
+    """Create default ES query based on query-string pattern."""
+    if not query_string:
+        query_string = request.values.get('q', '')
 
-    def __init__(self, query, index=None, doc_type=None, **kwargs):
-        """Create results object."""
-        self.body = {
-            'from': 0,
-            'size': 10,
-            'query': query,
-        }
-        self.body.update(kwargs)
-
-        self.index = index
-        self.doc_type = doc_type or 'record'
-
-        self._results = None
-
-    @property
-    def recids(self):
-        """Return list of recids for current query."""
-        return [int(r['_id']) for r in self._search()['hits']['hits']]
-
-    def _search(self):
-        if self._results is None:
-            self._results = es.search(
-                index=self.index,
-                doc_type=self.doc_type,
-                body=self.body,
+    query = Query()
+    if query_string.strip():
+        query.body['query'] = dict(
+            query_string=dict(
+                query=query_string,
+                allow_leading_wildcard=False,
             )
-        return self._results
-
-    def records(self):
-        """Return list of records for current query."""
-        from invenio_records.api import Record
-        return [Record(r['_source']) for r in self._search()['hits']['hits']]
-
-    def __len__(self):
-        """Return total number of hits."""
-        return self._search()['hits']['total']
+        )
+    query = query[(page-1)*size:page*size]
+    return (query, {'q': query_string})
 
 
-def search(query, per_page, page, sort=None):
-    """Return a slice of matched workflow object IDs and total hits."""
-    params = {
-        "query": query,
-        "index": current_app.config.get("WORKFLOWS_HOLDING_PEN_ES_PREFIX", "") + "*",
-        "doc_type": current_app.config.get("WORKFLOWS_HOLDING_PEN_DOC_TYPE", "record"),
-        "sort": sort or {},
-        "size": min(per_page, 10000),
-        "from": (page - 1) * min(per_page, 10000)
-    }
-    results = Query(**params)
-    results = results.search()
-    return results.recids, len(results)
-
-
-def get_holdingpen_objects(tags_list=None,
-                           sort_key="modified",
-                           per_page=25,
-                           page=1,
-                           operator="AND"):
-    """Get records for display in Holding Pen, return ids and total count."""
+def default_sorter_factory(query, index, sort_key=None):
+    """Add sorting parameters to query body."""
+    sort_arg_name = "sort"
+    if not sort_key:
+        sort_key = request.args.get(
+            sort_arg_name, "_workflow.modified", type=str
+        )
     if sort_key.endswith("_desc"):
         order = "desc"
         sort_key = sort_key[:-5]
@@ -117,25 +59,60 @@ def get_holdingpen_objects(tags_list=None,
         order = "asc"
 
     if not sort_key:
-        sort_key = "modified"
+        sort_key = "_workflow.modified"
 
     sorting = {
         sort_key: {
             "order": order
         }
     }
-    #return search(
-    #    query=" {0} ".format(operator).join(tags_list),
-    #    per_page=per_page,
-    #    page=page,
-    #    sort=sorting
-    #)
-    from invenio_workflows.models import DbWorkflowObject
-    ids = [
-        t[0] for t in DbWorkflowObject.query.with_entities(
-            DbWorkflowObject.id
-        ).distinct(
-            DbWorkflowObject.id
+    return query.sort(*[sorting]), {sort_arg_name: sort_key}
+
+
+class WorkflowUISearch(object):
+    """Provides a search interface for workflow UI."""
+
+    def __init__(self, search_index="workflows",
+                 search_type=None,
+                 query_factory=default_query_factory,
+                 sorter_factory=default_sorter_factory):
+        self.query_factory = obj_or_import_string(
+            query_factory
         )
-    ]
-    return ids, DbWorkflowObject.query.count()
+        self.sorter_factory = obj_or_import_string(
+            sorter_factory
+        )
+        self.search_index = search_index
+        self.search_type = search_type
+
+    @classmethod
+    def create(cls, app=None):
+        """Create workflow ui search interface from ``WORKFLOWS_UI_SEARCH``."""
+        if not app:
+            from flask import current_app
+            app = current_app
+        search_index = app.config['WORKFLOWS_UI_REST_ENDPOINT'].get('search_index')
+        return WorkflowUISearch(search_index=search_index)
+
+    def search(self, size=25, page=1, query_string=None, sort_key=None):
+        """Return search results for query."""
+        # Arguments that must be added in prev/next links
+        urlkwargs = dict()
+
+        query, qs_kwargs = self.query_factory(
+            self.search_index, page, size, query_string
+        )
+        urlkwargs.update(qs_kwargs)
+
+        query, qs_kwargs = self.sorter_factory(
+            query, self.search_index, sort_key
+        )
+        urlkwargs.update(qs_kwargs)
+
+        search_result = current_search_client.search(
+            index=self.search_index,
+            doc_type=self.search_type,
+            body=query.body,
+            version=True,
+        )
+        return urlkwargs, search_result

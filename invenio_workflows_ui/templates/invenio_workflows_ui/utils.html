@@ -1,0 +1,103 @@
+{#
+# This file is part of Invenio.
+# Copyright (C) 2014, 2015 CERN.
+#
+# Invenio is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; either version 2 of the
+# License, or (at your option) any later version.
+#
+# Invenio is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Invenio; if not, write to the Free Software Foundation, Inc.,
+# 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
+#}
+
+{% macro display_current_task(bwobject) -%}
+  {% set current_task = bwobject.get_current_task_info() %}
+  {% if current_task %}
+  <a class="btn btn-default navbar-btn"
+     href="#" data-toggle="modal" data-target="#taskinfomodal{{bwobject.id}}">
+    <i class="fa fa-stop"></i>
+    {{ _("Current task") }}
+  </a>
+  <div class="modal fade" id="taskinfomodal{{bwobject.id}}" tabindex="-1" role="dialog" aria-labelledby="taskmodal" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+          <h4 class="modal-title" id="taskmodal">{{ current_task.name }}</h4>
+        </div>
+        <div class="modal-body">
+          {% if doc %}
+            {{ current_task.doc }}
+          {% else %}
+            {{ _("Documentation unavailable") }}
+          {% endif %}
+
+          {% if current_task.parameters %}
+            <h5>{{ _("Parameters") }}:</h5>
+            <ul class='list-unstyled'>
+              {% for name, value in current_task.parameters %}
+                <li><strong>{{ name }}:</strong> {{ value }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-warning details-action" data-action="restart" data-dismiss="modal">{{ _('Restart task') }}</button>
+          <button type="button" class="btn btn-default" data-dismiss="modal">{{ _('Close') }}</button>
+        </div>
+      </div>{# /.modal-content #}
+    </div>{# /.modal-dialog #}
+  </div>{# /.modal #}
+  {% endif %}
+{%- endmacro %}
+
+{% macro display_workflow_definition(workflow_definition) -%}
+  <div class="list-group">
+    {% for item in workflow_definition %}
+      {% if item is mapping %}
+        {{ display_task(item.get("nicename"), item.get("doc"), item.get("parameters"), item.get("name"), loop.index, false)  }}
+      {% else %}
+        </div>
+        <div class="list-group">
+          {{ display_workflow_definition(item, loop.index) }}
+        </div>
+        <div class="list-group">
+      {% endif %}
+    {% endfor %}
+  </div>
+{%- endmacro %}
+
+{% macro render_field(field) %}
+  <div class="form-group">
+    {% if field.name != "core" %}
+      {% if field.name != "submit" %}
+        {{ field.label }}
+      {% endif %}
+      <div class="col-sm-10">
+        {{ field(**kwargs)|safe }}
+      </div>
+    {% else %}
+      <div class="col-sm-10">
+        <div class="checkbox">
+          <label>
+            <strong>{{ _('Core') }}</strong> {{ field(**kwargs)|safe }}
+          </label>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+  {% if field.errors %}
+    <ul class=errors>
+      {% for error in field.errors %}
+        <li>{{ error }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endmacro %}

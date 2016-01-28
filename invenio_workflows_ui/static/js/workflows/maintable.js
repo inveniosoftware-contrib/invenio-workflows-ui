@@ -20,7 +20,7 @@
 define(
   [
     "js/workflows/common",
-    "js/workflows/holdingpen",
+    "js/workflows/ui",
     "js/workflows/pagination",
     "js/workflows/perpage_menu",
     "js/workflows/sort_menu",
@@ -30,48 +30,37 @@ define(
     "js/workflows/url_updater"
   ],
   function(
-    HoldingPenCommon,
-    HoldingPen,
-    HoldingPenPagination,
-    HoldingPenPerPage,
-    HoldingPenSort,
-    HoldingPenTags,
-    HoldingPenTagsMenu,
-    HoldingPenSelection,
-    HoldingPenUrlUpdater) {
+    WorkflowsUICommon,
+    WorkflowsUI,
+    WorkflowsUIPagination,
+    WorkflowsUIPerPage,
+    WorkflowsUISort,
+    WorkflowsUITags,
+    WorkflowsUITagsMenu,
+    WorkflowsUISelection,
+    WorkflowsUIUrlUpdater) {
 
     "use strict";
 
-    function initialize(context) {
-      HoldingPenCommon.attachTo(document);
-      HoldingPen.attachTo("#hp-list", {
-        load_url: context.load_table_url,
-        page: context.page,
-        per_page: context.per_page
-      });
-      HoldingPenPagination.attachTo("#hp-pagination");
-      HoldingPenPerPage.attachTo("#hp-perpage-menu");
-      HoldingPenSort.attachTo("#hp-sort-menu");
-      HoldingPenTags.attachTo("#hp-tags", {
-        tags: context.tags
-      });
-      HoldingPenTagsMenu.attachTo("#hp-tags-menu", {
-        menuitemSelector: "#hp-tags-menu a",
-        valuePrefix: "version:"
-      });
-      HoldingPenTagsMenu.attachTo("#hp-type-menu", {
-        menuitemSelector: "#hp-type-menu a",
-        valuePrefix: "type:"
-      });
-      HoldingPenTagsMenu.attachTo("#hp-filter-menu", {
-        menuitemSelector: "#hp-filter-menu a",
-        valuePrefix: "f:"
-      });
+    WorkflowsUICommon.attachTo(document);
+    WorkflowsUI.attachTo(document);
+    WorkflowsUIPagination.attachTo("#hp-pagination");
+    WorkflowsUIPerPage.attachTo("#hp-perpage-menu");
+    WorkflowsUISort.attachTo("#hp-sort-menu");
+    WorkflowsUITags.attachTo("#search-input");
+    WorkflowsUITagsMenu.attachTo("#hp-tags-menu", {
+      menuitemSelector: "#hp-tags-menu a",
+      valuePrefix: "_workflow.status:"
+    });
+    WorkflowsUITagsMenu.attachTo("#hp-type-menu", {
+      menuitemSelector: "#hp-type-menu a",
+      valuePrefix: "_workflow.type:"
+    });
+    WorkflowsUISelection.attachTo(document);
+    WorkflowsUIUrlUpdater.attachTo(document, {
+      urlPrefix: $('#workflows-ui-init').data('list-url')
+    });
 
-      HoldingPenSelection.attachTo(document);
-      HoldingPenUrlUpdater.attachTo(document);
-    }
-
-    return initialize;
+    $(document).trigger("reloadWorkflowsUITable");
   }
 );

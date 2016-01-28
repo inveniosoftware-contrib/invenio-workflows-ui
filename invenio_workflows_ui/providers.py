@@ -22,40 +22,34 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-
-"""Module tests."""
+"""Deposit identifier provider."""
 
 from __future__ import absolute_import, print_function
 
-from flask import Flask
-
-from invenio_workflows_ui import InvenioWorkflowsUI
-
-
-def test_version():
-    """Test version import."""
-    from invenio_workflows_ui import __version__
-    assert __version__
+from invenio_pidstore.providers.base import BaseProvider
+from invenio_pidstore.models import PIDStatus
 
 
-def test_init():
-    """Test extension initialization."""
-    app = Flask('testapp')
-    ext = InvenioWorkflowsUI(app)
-    assert 'invenio-workflows-ui' in app.extensions
-    ext.register_action('test_action', "test")
-    assert 'test_action' in app.extensions['invenio-workflows-ui'].actions
-    assert app.extensions['invenio-workflows-ui'].searcher
+class WorkflowUIProvider(BaseProvider):
+    """Deposit identifier provider."""
 
-    app = Flask('testapp')
-    ext = InvenioWorkflowsUI()
-    assert 'invenio-workflows-ui' not in app.extensions
-    ext.init_app(app)
-    assert 'invenio-workflows-ui' in app.extensions
+    pid_type = 'wfui'
+    """Type of persistent identifier."""
 
+    pid_provider = None
+    """Provider name.
 
-def test_view(app):
-    """Test view."""
-    with app.test_client() as client:
-        res = client.get("/workflows")
-        assert res.status_code == 200
+    The provider name is not recorded in the PID since the provider does not
+    provide any additional features besides creation of workflow ids.
+    """
+
+    default_status = PIDStatus.REGISTERED
+    """Deposit IDs are by default registered immediately."""
+
+    @classmethod
+    def create(cls, object_type=None, object_uuid=None, **kwargs):
+        """Create a new workflow identifier."""
+        assert 'pid_value' in kwargs
+        kwargs.setdefault('status', cls.default_status)
+        return super(WorkflowUIProvider, cls).create(
+            object_type=object_type, object_uuid=object_uuid, **kwargs)

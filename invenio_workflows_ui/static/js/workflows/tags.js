@@ -21,47 +21,55 @@
 define(
   [
     'jquery',
-    "node_modules/bootstrap-tagsinput/dist/bootstrap-tagsinput.js",
-    'node_modules/flightjs/build/flight.js'
+    'flight',
+    'node_modules/selectize/dist/js/selectize'
   ],
   function(
     $,
-    tagsinput,
-    flight) {
+    flight,
+    selectize) {
 
     'use strict';
 
-    return flight.component(HoldingPenTags);
+    return flight.component(WorkflowsUITags);
 
     /**
-    * .. js:class:: HoldingPenTags()
+    * .. js:class:: WorkflowsUITags()
     *
-    * Component for handling the filter/search available through the
-    * bootstrap-tagsinput element.
+    * Component for handling the filter/search available through interface.
     *
     * :param Array tags: list of tags to add from the beginning.
     *
     */
-    function HoldingPenTags() {
+    function WorkflowsUITags() {
 
       this.attributes({
-        tags: null
+        tags: []
       });
 
+      /* Event handler for dropdown selection
+       *
+       * `this` is the context of this component
+       */
       this.addTagFromMenu = function(ev, data) {
-        // Tagsinput already deal with identical tags, but we need to remove
-        // tags from the same menu.
         var that = this;
+        var items = this.getItems();
+
         if (data.prefix) {
-            var tags_to_remove = $.grep(this.$node.tagsinput("items"), function(item, index) {
-              return item.value.slice(0, data.prefix.length) == data.prefix;
+            var tags_to_remove = $.grep(items, function(item, index) {
+              return item.slice(0, data.prefix.length) == data.prefix;
             });
             $.each(tags_to_remove, function(index, item) {
-              that.$node.tagsinput('remove', item)
+              that.$node[0].selectize.removeItem(item);
             })
         }
-        this.$node.tagsinput('add', {text: data.text, value: data.value});
+        this.$node[0].selectize.createItem(data.value);
       };
+
+      this.getItems = function() {
+          return this.$node[0].selectize.items
+      };
+
 
       this.addTagFromFreetext = function(ev) {
         // ev.item is the freeinput text
@@ -72,55 +80,55 @@ define(
         }
       };
 
-      this.getCurrentTags = function() {
-        // Extract only the "real" value (ignore translated ones)
-        return this.$node.tagsinput("items").map(function(currentValue, index, array) {
-          return currentValue.value;
-        });
+      /* Event handler for manual trigger of updateing tags
+       *
+       * `this` is the context of the component
+       */
+      this.componentTagsUpdate = function() {
+        var payload = {};
+        payload.search = this.$node[0].selectize.$input.val();
+
+        $(document).trigger("reloadWorkflowsUITable", payload);
+        $(document).trigger("update_url", payload);
       };
 
+      /* Event handler for selectize onItemAdd/onItemRemove
+       *
+       * `this` is the context of the selectize instance
+       */
       this.onTagsUpdate = function(ev, data) {
         var payload = {};
-        payload.tags = this.getCurrentTags();
-        this.trigger(document, "reloadHoldingPenTable", payload);
-        this.trigger(document, "update_url", payload);
-      };
+        payload.search = this.$input.val();
 
+        $(document).trigger("reloadWorkflowsUITable", payload);
+        $(document).trigger("update_url", payload);
+      };
 
       this.after('initialize', function() {
         this.on(document, "addTagFromMenu", this.addTagFromMenu);
-        this.on("itemAdded", this.onTagsUpdate);
-        this.on("itemRemoved", this.onTagsUpdate);
-        this.on('beforeFreeInputItemAdd', this.addTagFromFreetext);
+        this.on(document, "updateTags", this.componentTagsUpdate);
 
-        this.$node.tagsinput({
-            tagClass: function (item) {
-                switch (item.value) {
-                  case 'version:"In process"':
-                    return 'label label-warning';
-                  case 'version:"Need action"':
-                    return 'label label-danger';
-                  case 'version:"Waiting"':
-                    return 'label label-warning';
-                  case 'version:"Done"':
-                    return 'label label-success';
-                  case 'version:"New"':
-                    return 'label label-info';
-                  case 'version:"Error"':
-                    return 'label label-danger';
-                  default:
-                    return 'badge badge-warning';
+        this.$node.selectize({
+            plugins: ['restore_on_backspace', 'remove_button'],
+            delimiter: ' AND ',
+            persist: false,
+            create: function(input) {
+                return {
+                    value: input,
+                    text: input
                 }
             },
-            itemValue: 'value',
-            itemText: 'text'
+            onChange: this.onTagsUpdate,
+            onInitialize: this.onTagsUpdate,
         });
+
+
         // Add any existing tags
-        var that = this;
-        this.attr.tags.map(function(item) {
-          that.$node.tagsinput('add', item);
-        });
-        console.log("Tags init");
+        // var that = this;
+        // this.attr.tags.map(function(item) {
+        //  that.$node.tagsinput('add', item);
+        // });
+
       });
     }
 });

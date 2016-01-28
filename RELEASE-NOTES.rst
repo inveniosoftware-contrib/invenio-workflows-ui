@@ -1,13 +1,13 @@
 =============================
- invenio-workflows-ui v0.1.0
+ Invenio-Workflows-UI v0.1.0
 =============================
 
-invenio-workflows-ui v0.1.0 was released on TBD, 2016.
+Invenio-Workflows-UI v0.1.0 was released on TBD, 2016.
 
 About
 -----
 
-UI layer for invenio-workflows.
+Invenio module which acts as a UI layer for invenio-workflows.
 
 *This is an experimental developer preview release.*
 
@@ -26,11 +26,11 @@ Documentation
 
    http://pythonhosted.org/invenio-workflows-ui/
 
-Happy hacking and thanks for flying invenio-workflows-ui.
+Happy hacking and thanks for flying Invenio-Workflows-UI.
 
 | Invenio Development Team
 |   Email: info@invenio-software.org
 |   IRC: #invenio on irc.freenode.net
-|   Twitter: http://twitter.com/inveniosoftware
-|   GitHub: https://github.com/inveniosoftware/invenio-workflows-ui
+|   Twitter: http://twitter.com/inspirehep
+|   GitHub: https://github.com/inspirehep/invenio-workflows-ui
 |   URL: http://invenio-software.org

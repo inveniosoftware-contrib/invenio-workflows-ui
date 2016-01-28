@@ -21,21 +21,14 @@ require(
   [
     "js/workflows/common",
     "js/workflows/maintable",
-    "js/workflows/holdingpen",
+    "js/workflows/ui",
     "js/workflows/pagination",
     "js/workflows/perpage_menu",
     "js/workflows/sort_menu",
     "js/workflows/selection",
     "js/workflows/tags",
     "js/workflows/tags_menu",
-    "js/workflows/details",
-    "js/workflows/details_actions",
-    "js/workflows/details_actions_buttons",
-    "js/workflows/details_preview",
-    "js/workflows/details_preview_menu",
-    "js/workflows/details_page",
-    "js/workflows/url_updater",
-    "js/workflows/actions/init"
+    "js/workflows/url_updater"
   ],
   function() {
     // This file is simply here to make sure the above dependencies are

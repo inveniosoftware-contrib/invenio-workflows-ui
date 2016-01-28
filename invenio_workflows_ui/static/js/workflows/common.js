@@ -21,43 +21,39 @@
 define(
   [
     'jquery',
-    'node_modules/flightjs/build/flight.js',
-    'node_modules/hogan.js/dist/hogan-3.0.2.min.amd.js',
-    'node_modules/requirejs-hogan-plugin/text!js/workflows/templates/alert.mustache',
+    'flight',
+    'hgn!js/workflows/templates/alert'
   ],
   function(
     $,
     flight,
-    hogans,
     tpl_alert_src) {
 
     "use strict";
 
-    return flight.component(HoldingPenCommon);
+    return flight.component(WorkflowsUICommon);
 
     /**
-    * .. js:class:: HoldingPenCommon()
+    * .. js:class:: WorkflowsUICommon()
     *
-    * Common utilities throughout Holding Pen.
+    * Common utilities throughout workflows ui.
     *
     * :param string alertSelector:
     *
     */
-    function HoldingPenCommon() {
+    function WorkflowsUICommon() {
       this.attributes({
         // URL
         alertSelector: "#alert-message"
       });
 
-      this.setAlertMessage = function (ev, data) {
-        $(this.attr.alertSelector).html(hogans.compile(tpl_alert_src).render({
-          category: data.category,
-          message: data.message
-        }));
-      };
 
       this.after('initialize', function() {
-        this.on(document, "updateAlertMessage", this.setAlertMessage);
+        this.on(document, "updateAlertMessage", function (ev, data) {
+        $(this.attr.alertSelector).html(tpl_alert_src({
+          category: data.category,
+          message: data.message
+        }));});
         console.log("Common init");
       });
     }

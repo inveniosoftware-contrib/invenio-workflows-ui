@@ -1,6 +1,6 @@
 /*
  * This file is part of Invenio.
- * Copyright (C) 2015 CERN.
+ * Copyright (C) 2014, 2015 CERN.
  *
  * Invenio is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -17,42 +17,21 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
  */
 
-
 define(
   [
-    'jquery',
-    'flight'
+     "js/workflows/common",
+     "js/workflows/details/details_actions",
+     "js/workflows/details/details_actions_buttons",
   ],
   function(
-    $,
-    flight) {
+    WorkflowsUICommon,
+    DetailsActions,
+    DetailsActionsButtons) {
 
-    'use strict';
+    "use strict";
 
-    return flight.component(WorkflowsUISort);
-
-    /**
-    * .. js:class:: WorkflowsUISort()
-    *
-    * workflows UI sorting dropdown.
-    *
-    *
-    */
-    function WorkflowsUISort() {
-      this.attributes({
-        sortMenuitemSelector: "#hp-sort-menu a"
-      });
-
-      this.changeSort = function(ev, data) {
-        var sort_key = $(data.el).attr("name");
-        this.trigger(document, "reloadWorkflowsUITable", {"sort_key": sort_key});
-      };
-
-      this.after('initialize', function() {
-        this.on("click", {
-          sortMenuitemSelector: this.changeSort,
-        });
-        console.log("Sort init");
-      });
-    }
-});
+    WorkflowsUICommon.attachTo(document);
+    DetailsActions.attachTo("#workflows-ui-init");
+    DetailsActionsButtons.attachTo(document);
+  }
+);

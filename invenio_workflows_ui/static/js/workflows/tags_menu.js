@@ -17,28 +17,29 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
  */
 
-'use strict';
 
 define(
   [
     'jquery',
-    'node_modules/flightjs/build/flight.js'
+    'flight'
   ],
   function(
     $,
     flight) {
 
-    return flight.component(HoldingPenTagsMenu);
+    'use strict';
+
+    return flight.component(WorkflowsUITagsMenu);
 
     /**
-    * .. js:class:: HoldingPenTagsMenu()
+    * .. js:class:: WorkflowsUITagsMenu()
     *
     * UI Component for a dropdown menu to add to the tagsinput.
     *
     * :param string menuitemSelector: DOM selector for each menu item.
     *
     */
-    function HoldingPenTagsMenu() {
+    function WorkflowsUITagsMenu() {
 
       this.attributes({
         menuitemSelector: "#hp-tags-menu a",
