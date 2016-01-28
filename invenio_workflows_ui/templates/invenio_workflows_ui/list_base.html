@@ -32,11 +32,9 @@
 
   <script type="text/javascript">
     require(["jquery",
-             "js/workflows/maintable",
-             "js/workflows/actions/init"],
+             "js/workflows/maintable"],
             function($,
-                     initialize,
-                     initialize_actions) {
+                     initialize) {
       var context = {
         load_table_url: "{{ url_for('invenio_workflows_ui.load')|safe }}",
         tags: JSON.parse('{{tags|safe}}'),
@@ -46,7 +44,6 @@
         per_page: 10
       };
       initialize(context);
-      initialize_actions(context);
       $(document).trigger("reloadHoldingPenTable");
     });
   </script>

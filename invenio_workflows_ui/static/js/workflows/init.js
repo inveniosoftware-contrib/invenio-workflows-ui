@@ -34,8 +34,7 @@ require(
     "js/workflows/details_preview",
     "js/workflows/details_preview_menu",
     "js/workflows/details_page",
-    "js/workflows/url_updater",
-    "js/workflows/actions/init"
+    "js/workflows/url_updater"
   ],
   function() {
     // This file is simply here to make sure the above dependencies are
