@@ -19,34 +19,44 @@
 
 """Workflows bundles."""
 
-from __future__ import unicode_literals
+from __future__ import absolute_import, print_function
 
-# FIXME We do not really know which theme we use
-from invenio_theme.bundles import js as _js
+from flask_assets import Bundle
 
 from invenio_assets import NpmBundle, RequireJSFilter
 
+from werkzeug.local import LocalProxy
+
+# NOTE:
+# Here we exclude base JS bundles like jQuery etc. so that there does
+# not exist several jQuery instances on the site.
+try:
+    from flask import current_app
+    exclude_js = LocalProxy(
+        lambda: current_app.config['THEME_BASE_BUNDLES_EXCLUDE_JS']
+    )
+except KeyError:
+    from invenio_theme.bundles import js as _js
+    exclude_js = [_js.contents]
+
+
 js = NpmBundle(
     'js/workflows/init.js',
-    filters=RequireJSFilter(exclude=[_js.contents[1]]),
+    filters=RequireJSFilter(exclude=exclude_js),
     output='gen/workflows.%(version)s.js',
     npm={
         "bootstrap-tagsinput": "git://github.com/inspirehep/bootstrap-tagsinput.git#master",
-        "prismjs": "latest",
-        "flightjs": "latest",
-        "hogan.js": "latest",
-        "requirejs-hogan-plugin": "latest",
+        "prismjs": "~1.4.1",
+        "flightjs": "~1.5.0",
+        "hogan.js": "~3.0.2",
+        "requirejs-hogan-plugin": "~0.3.1",
     }
 )
 
-css = NpmBundle(
+css = Bundle(
     'node_modules/prismjs/themes/prism.css',
     'node_modules/bootstrap-tagsinput/dist/bootstrap-tagsinput.css',
     'css/workflows/workflows.css',
     filters='scss, cleancss',
     output='gen/workflows.%(version)s.css',
-    npm={
-        "bootstrap-tagsinput": "git://github.com/inspirehep/bootstrap-tagsinput.git#master",
-        "prismjs": "latest",
-    }
 )
