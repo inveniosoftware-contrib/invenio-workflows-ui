@@ -17,21 +17,7 @@
 # along with Invenio; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 
-"""Config variables for workflows module."""
-
-WORKFLOWS_HOLDING_PEN_CACHE_TIMEOUT = 2629743  # one month
-"""Determines the timeout when caching formatted Holding Pen rows."""
-
-WORKFLOWS_HOLDING_PEN_DEFAULT_OUTPUT_FORMAT = "hd"
-"""The default timeout when formatting Holding Pen detailed pages."""
-
-WORKFLOWS_SNAPSHOTS_ENABLED = False
-"""Enable to create an copy of each workflow object with initial data."""
-
-WORKFLOWS_DATA_PROCESSORS = {
-    'json': 'json.load',
-    'marcxml': 'invenio_workflows.manage:split_marcxml',
-}
+"""Config variables for workflows UI module."""
 
 WORKFLOWS_HOLDING_PEN_DOC_TYPE = "record"
 """The name of the Elasticsearch doc_type to use for Holding Pen records."""
@@ -39,7 +25,6 @@ WORKFLOWS_HOLDING_PEN_DOC_TYPE = "record"
 WORKFLOWS_HOLDING_PEN_ES_PREFIX = "holdingpen-"
 """The prefix name of the Elasticsearch indices to use for Holding Pen.
 For each record index, an equivalent is created for Holding Pen."""
-
 
 WORKFLOWS_HOLDING_PEN_ES_PROPERTIES = {
     "global_fulltext": {

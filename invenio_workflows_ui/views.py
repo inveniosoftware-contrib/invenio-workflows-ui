@@ -35,6 +35,8 @@ For example, accepting submissions or other tasks.
 
 from __future__ import absolute_import, print_function
 
+from functools import wraps
+
 import json
 
 import os
@@ -64,9 +66,8 @@ from .search import get_holdingpen_objects
 from .utils import (
     get_rows,
     get_data_types,
-    get_rendered_task_results,
     get_previous_next_objects,
-    alert_response_wrapper
+    Pagination
 )
 
 
@@ -83,44 +84,6 @@ blueprint = Blueprint(
     template_folder='templates',
     static_folder='static',
 )
-
-# FIXME Replace or move to another place
-from math import ceil
-class Pagination(object):
-    """Helps with rendering pagination list."""
-
-    def __init__(self, page, per_page, total_count):
-        self.page = page
-        self.per_page = per_page
-        self.total_count = total_count
-
-    @property
-    def pages(self):
-        """Returns number of pages."""
-        return int(ceil(self.total_count / float(self.per_page)))
-
-    @property
-    def has_prev(self):
-        """Returns true if it has previous page."""
-        return self.page > 1
-
-    @property
-    def has_next(self):
-        """Returns true if it has next page."""
-        return self.page < self.pages
-
-    def iter_pages(self, left_edge=1, left_current=1,
-                   right_current=3, right_edge=1):
-        last = 0
-        for num in xrange(1, self.pages + 1):
-            if num <= left_edge or \
-               (num > self.page - left_current - 1 and
-                num < self.page + right_current) or \
-               num > self.pages - right_edge:
-                if last + 1 != num:
-                    yield None
-                yield num
-                last = num
 
 # TODO Could we avoid having Yet Another Mapping?
 HOLDINGPEN_WORKFLOW_STATES = {
@@ -151,9 +114,24 @@ HOLDINGPEN_WORKFLOW_STATES = {
 }
 
 
+def alert_response_wrapper(func):
+    """Wrap given function with wrapper to return JSON for alerts."""
+    @wraps(func)
+    def inner(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as error:
+            current_app.logger.exception(error)
+            return jsonify({
+                "category": "danger",
+                "message": "Error: {0}".format(error)
+            })
+    return inner
+
+
 @blueprint.route('/', methods=['GET', 'POST'])
 @blueprint.route('/index', methods=['GET', 'POST'])
-#@login_required
+@login_required
 def index():
     """
     Display main interface of Holdingpen.
@@ -172,7 +150,7 @@ def index():
 
 
 @blueprint.route('/load', methods=['GET', 'POST'])
-#@login_required
+@login_required
 #@permission_required(viewholdingpen.name)
 def load(page=1, per_page=0, sort_key="modified"):
     """Load objects for the table."""
@@ -232,7 +210,7 @@ def load(page=1, per_page=0, sort_key="modified"):
 @blueprint.route('/list', methods=['GET', ])
 @blueprint.route('/list/', methods=['GET', ])
 @blueprint.route('/list/<tags_slug>', methods=['GET', ])
-#@login_required
+@login_required
 #@permission_required(viewholdingpen.name)
 def list_objects(tags_slug=None):
     """Display main table interface of Holdingpen."""
@@ -268,7 +246,7 @@ def list_objects(tags_slug=None):
 
 @blueprint.route('/<int:objectid>', methods=['GET', 'POST'])
 @blueprint.route('/details/<int:objectid>', methods=['GET', 'POST'])
-#@login_required
+@login_required
 #@permission_required(viewholdingpen.name)
 def details(objectid):
     """Display info about the object."""
@@ -290,65 +268,19 @@ def details(objectid):
     else:
         rendered_actions = {}
 
-    results = get_rendered_task_results(bwobject)
     return render_template(
-        'workflows/details.html',
+        'invenio_workflows_ui/details.html',
         bwobject=bwobject,
         rendered_actions=rendered_actions,
         data_preview=formatted_data,
         workflow_name=bwobject.get_workflow_name() or "",
-        task_results=results,
         previous_object=previous_object,
         next_object=next_object,
     )
 
 
-@blueprint.route('/result/<int:object_id>/<path:filename>',
-                 methods=['POST', 'GET'])
-#@login_required
-#@permission_required(viewholdingpen.name)
-def get_file_from_task_result(object_id=None, filename=None):
-    """Send the requested file to user from a workflow task result.
-
-    Expects a certain file meta-data structure in task result:
-
-    .. code-block:: python
-
-        {
-            "type": "Fulltext",
-            "filename": "file.pdf",
-            "full_path": "/path/to/file",
-        }
-
-    """
-    bwobject = DbWorkflowObject.query.get_or_404(object_id)
-    task_results = bwobject.get_tasks_results()
-    if filename in task_results and task_results[filename]:
-        fileinfo = task_results[filename][0].get("result", dict())
-        directory, actual_filename = os.path.split(
-            fileinfo.get("full_path", ""))
-        return send_from_directory(directory, actual_filename)
-    abort(404)
-
-
-@blueprint.route('/file/<int:object_id>/<path:filename>',
-                 methods=['POST', 'GET'])
-#@login_required
-#@permission_required(viewholdingpen.name)
-def get_file_from_object(object_id=None, filename=None):
-    """Send the requested file to user from a workflow object FFT value."""
-    bwobject = DbWorkflowObject.query.get_or_404(object_id)
-    data = bwobject.get_data()
-    urls = data.get("fft.url", [])
-    for url in urls:
-        if os.path.basename(filename) == os.path.basename(url):
-            directory, actual_filename = os.path.split(url)
-            return send_from_directory(directory, actual_filename)
-    # Return 404
-
-
 @blueprint.route('/restart_record', methods=['GET', 'POST'])
-#@login_required
+@login_required
 #@permission_required(viewholdingpen.name)
 @alert_response_wrapper
 def restart_record(objectid=None, start_point='continue_next'):
@@ -366,7 +298,7 @@ def restart_record(objectid=None, start_point='continue_next'):
 
 
 @blueprint.route('/continue_record', methods=['GET', 'POST'])
-#@login_required
+@login_required
 #@permission_required(viewholdingpen.name)
 #@alert_response_wrapper
 def continue_record(objectid=None):
@@ -378,7 +310,7 @@ def continue_record(objectid=None):
     ))
 
 
-#@login_required
+@login_required
 #@permission_required(viewholdingpen.name)
 @blueprint.route('/restart_record_prev/', methods=['GET', 'POST'])
 @alert_response_wrapper
@@ -393,7 +325,7 @@ def restart_record_prev():
 
 
 @blueprint.route('/delete', methods=['GET', 'POST'])
-#@login_required
+@login_required
 #@permission_required(viewholdingpen.name)
 #@alert_response_wrapper
 def delete_from_db():
@@ -406,25 +338,9 @@ def delete_from_db():
     ))
 
 
-@blueprint.route('/delete_multi', methods=['GET', 'POST'])
-#@login_required
-#@permission_required(viewholdingpen.name)
-@alert_response_wrapper
-def delete_multi():
-    """Delete list of objects from the db."""
-    from .utils import parse_bwids
-    bwolist = request.form["bwolist"]
-    bwolist = parse_bwids(bwolist)
-    for objectid in bwolist:
-        delete_from_db(objectid)
-    return jsonify(dict(
-        category="success",
-        message=_("Objects deleted successfully.")
-    ))
-
 
 @blueprint.route('/resolve', methods=['GET', 'POST'])
-#@login_required
+@login_required
 #@permission_required(viewholdingpen.name)
 def resolve_action():
     """Resolve the action taken.
@@ -456,18 +372,3 @@ def resolve_action():
             "message": "{0} records resolved.".format(ids_resolved),
             "category": "info"
         })
-
-
-@blueprint.route('/entry_data_preview', methods=['GET', 'POST'])
-#@login_required
-#@permission_required(viewholdingpen.name)
-def entry_data_preview():
-    """Present the data in a human readble form or in xml code."""
-    objectid = request.form["objectid"]
-    of = request.form["of"]
-    bwobject = DbWorkflowObject.query.get_or_404(objectid)
-    if not bwobject:
-        flash("No object found for %s" % (objectid,))
-        return jsonify(data={})
-    formatted_data = bwobject.get_formatted_data(of=of)
-    return jsonify(data=formatted_data)

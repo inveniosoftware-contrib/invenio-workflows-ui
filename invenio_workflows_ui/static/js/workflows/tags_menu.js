@@ -17,16 +17,17 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
  */
 
-'use strict';
 
 define(
   [
     'jquery',
-    'node_modules/flightjs/build/flight.js'
+    'flight'
   ],
   function(
     $,
     flight) {
+
+    'use strict';
 
     return flight.component(HoldingPenTagsMenu);
 

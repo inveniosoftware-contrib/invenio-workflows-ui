@@ -20,7 +20,7 @@
 define(
   [
     'jquery',
-    'node_modules/flightjs/build/flight.js',
+    'flight',
   ],
   function(
     $,

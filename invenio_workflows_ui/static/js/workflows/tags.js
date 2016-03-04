@@ -21,13 +21,13 @@
 define(
   [
     'jquery',
-    "node_modules/bootstrap-tagsinput/dist/bootstrap-tagsinput.js",
-    'node_modules/flightjs/build/flight.js'
+    'flight',
+    'node_modules/bootstrap-tagsinput/dist/bootstrap-tagsinput',
   ],
   function(
     $,
-    tagsinput,
-    flight) {
+    flight,
+    tagsinput) {
 
     'use strict';
 

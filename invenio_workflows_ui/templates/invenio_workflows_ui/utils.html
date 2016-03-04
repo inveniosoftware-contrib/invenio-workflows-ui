@@ -17,42 +17,45 @@
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 #}
 
-{% macro display_task(nicename, doc, parameters, name, id, completed) -%}
-
-  <a class="list-group-item list-group-item-{% if completed %}success{% else %}info{% endif %}"  href="#" data-toggle="modal" data-target="#infoModal{{id}}">
-    <span class="glyphicon glyphicon-{% if completed %}ok-sign{% else %}question-sign{% endif %}"></span>
-    {{ nicename }}
+{% macro display_current_task(bwobject) -%}
+  {% set current_task = bwobject.get_current_task_info() %}
+  {% if current_task %}
+  <a class="btn btn-default navbar-btn"
+     href="#" data-toggle="modal" data-target="#taskinfomodal{{bwobject.id}}">
+    <i class="fa fa-stop"></i>
+    {{ _("Current task") }}
   </a>
-  <div class="modal fade" id="infoModal{{id}}" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal fade" id="taskinfomodal{{bwobject.id}}" tabindex="-1" role="dialog" aria-labelledby="taskmodal" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
           <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-          <h4 class="modal-title" id="myModalLabel">{{ name }}</h4>
+          <h4 class="modal-title" id="taskmodal">{{ current_task.name }}</h4>
         </div>
         <div class="modal-body">
           {% if doc %}
-            {{ doc }}
+            {{ current_task.doc }}
           {% else %}
             {{ _("Documentation unavailable") }}
           {% endif %}
 
-          {% if parameters %}
+          {% if current_task.parameters %}
             <h5>{{ _("Parameters") }}:</h5>
             <ul class='list-unstyled'>
-              {% for name, value in parameters %}
+              {% for name, value in current_task.parameters %}
                 <li><strong>{{ name }}:</strong> {{ value }}</li>
               {% endfor %}
             </ul>
           {% endif %}
         </div>
         <div class="modal-footer">
+          <button type="button" class="btn btn-warning details-action" data-action="restart" data-dismiss="modal">{{ _('Restart task') }}</button>
           <button type="button" class="btn btn-default" data-dismiss="modal">{{ _('Close') }}</button>
         </div>
       </div>{# /.modal-content #}
     </div>{# /.modal-dialog #}
   </div>{# /.modal #}
-
+  {% endif %}
 {%- endmacro %}
 
 {% macro display_workflow_definition(workflow_definition) -%}

@@ -31,8 +31,6 @@ require(
     "js/workflows/details",
     "js/workflows/details_actions",
     "js/workflows/details_actions_buttons",
-    "js/workflows/details_preview",
-    "js/workflows/details_preview_menu",
     "js/workflows/details_page",
     "js/workflows/url_updater"
   ],

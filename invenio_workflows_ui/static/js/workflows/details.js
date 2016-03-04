@@ -19,31 +19,21 @@
 
 define(
   [
-
      "js/workflows/common",
      "js/workflows/details_actions",
      "js/workflows/details_actions_buttons",
-     "js/workflows/details_preview",
-     "js/workflows/details_preview_menu",
      "js/workflows/details_page"
   ],
   function(
     HoldingPenCommon,
     DetailsActions,
     DetailsActionsButtons,
-    DetailsPreview,
-    DetailsPreviewMenu,
     DetailsPage) {
 
     "use strict";
 
     function initialize(context) {
       HoldingPenCommon.attachTo(document);
-      DetailsPreview.attachTo(document, {
-        preview_url: context.preview_url,
-        id_object: context.id_object
-      });
-      DetailsPreviewMenu.attachTo("#object-preview");
       DetailsActions.attachTo(document, {
         restart_url: context.restart_url,
         delete_url: context.delete_url,
