@@ -196,7 +196,7 @@
 
     {% block workflow_error %}
       <div class="row">
-      {% set error_message = bwobject.get_error_message() %}
+      {% set error_message = bwobject.extra_data._error_msg %}
       {% if error_message %}
         <div class="col-md-12">
         <div class="panel panel-danger">

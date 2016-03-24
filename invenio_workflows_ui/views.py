@@ -57,6 +57,8 @@ from flask_babelex import gettext as _
 from flask.ext.celeryext import create_celery_app
 from flask_login import login_required
 
+from invenio_db import db
+
 from invenio_workflows.api import continue_oid_delayed, start_delayed
 from invenio_workflows.models import DbWorkflowObject, ObjectStatus, Workflow
 
@@ -279,36 +281,6 @@ def details(objectid):
     )
 
 
-@blueprint.route('/restart_record', methods=['GET', 'POST'])
-@login_required
-#@permission_required(viewholdingpen.name)
-@alert_response_wrapper
-def restart_record(objectid=None, start_point='continue_next'):
-    """Restart the initial object in its workflow."""
-    bwobject = DbWorkflowObject.query.get_or_404(objectid)
-
-    workflow = Workflow.query.filter(
-        Workflow.uuid == bwobject.id_workflow).first()
-
-    start_delayed(workflow.name, [bwobject.get_data()])
-    return jsonify(dict(
-        category="success",
-        message=_("Object restarted successfully.")
-    ))
-
-
-@blueprint.route('/continue_record', methods=['GET', 'POST'])
-@login_required
-#@permission_required(viewholdingpen.name)
-#@alert_response_wrapper
-def continue_record(objectid=None):
-    """Continue workflow for current object."""
-    continue_oid_delayed(oid=objectid, start_point='continue_next')
-    return jsonify(dict(
-        category="success",
-        message=_("Object continued with next task successfully.")
-    ))
-
 
 @login_required
 #@permission_required(viewholdingpen.name)
@@ -332,6 +304,7 @@ def delete_from_db():
     """Delete the object from the db."""
     objectid = request.form["objectid"]
     DbWorkflowObject.delete(objectid)
+    db.session.commit()
     return jsonify(dict(
         category="success",
         message=_("Object deleted successfully.")
