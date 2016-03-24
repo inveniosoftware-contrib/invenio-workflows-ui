@@ -1,0 +1,278 @@
+{#
+# This file is part of Invenio.
+# Copyright (C) 2012, 2013, 2014, 2015, 2016 CERN.
+#
+# Invenio is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; either version 2 of the
+# License, or (at your option) any later version.
+#
+# Invenio is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Invenio; if not, write to the Free Software Foundation, Inc.,
+# 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
+#}
+
+{%- extends config.INVENIO_WORKFLOWS_UI_BASE_TEMPLATE %}
+
+{%- import 'invenio_workflows_ui/utils.html' as utils %}
+
+{% block header %}
+  {{ super() }}
+{% endblock header %}
+
+{% block css %}
+  {{ super() }}
+  {% assets "invenio_workflows_ui_css" %}
+    <link href="{{ ASSET_URL }}" rel="stylesheet">{% endassets %}
+{% endblock css %}
+
+{% block javascript %}
+  {{ super() }}
+  {% assets "invenio_workflows_ui_js" %}
+    <script src="{{ ASSET_URL }}"></script>{% endassets %}
+
+  <script type="text/javascript">
+    require(["jquery",
+              "js/workflows/details"
+            ],
+            function ($,
+                      initialize) {
+              var context = {
+                restart_url: "{{ url_for('invenio_workflows_ui.restart_record_prev')|safe }}",
+                delete_url: "{{ url_for('invenio_workflows_ui.delete_from_db')|safe }}",
+                action_url: "{{ url_for('invenio_workflows_ui.resolve_action')|safe }}",
+                id_object: "{{ bwobject.id }}",
+
+                {% if next_object %}
+                  next_page_url: "{{ url_for('invenio_workflows_ui.details', objectid=next_object) }}",
+                {% endif %}
+                {% if previous_object %}
+                  previous_page_url: "{{ url_for('invenio_workflows_ui.details', objectid=previous_object) }}",
+                {% endif %}
+
+                main_list_url: "{{ url_for('invenio_workflows_ui.list_objects') }}",
+
+                attach_action_to: document
+              };
+              initialize(context);
+            });
+  </script>
+{%- endblock javascript %}
+
+{% block page_body %}
+
+   <div class="container">
+
+   {%- block alerts -%}
+     {%- block action_alert -%}
+       {% if 'message' in bwobject.extra_data and bwobject.get_action() != None %}
+         <div id="usermessage" class="alert alert-warning alert-dismissible">
+           {{ bwobject.extra_data['_message'] }}
+           <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+         </div>
+       {% endif %}
+     {%- endblock -%}
+
+     {%- block workflow_completed -%}
+       {% if bwobject.version == 1 %}
+         <div id="successmessage" class="alert alert-success">
+           {{ _('Workflow completed with success') }}
+           <a class="close" data-dismiss="alert">&times;</a>
+         </div>
+       {% elif bwobject.version == 2 %}
+         <div class="alert alert-info">
+           {{ _('Record is stopped awaiting user action') }}
+           <a class="close" data-dismiss="alert">&times;</a>
+         </div>
+       {% elif bwobject.version == 3 %}
+         <div class="alert alert-warning">
+           {{ _('Record is currently processing') }}
+           <a class="close" data-dismiss="alert">&times;</a>
+         </div>
+       {% elif bwobject.version == 4 %}
+         <div class="alert alert-warning">
+           {{ _('Record is waiting to be processed') }}
+           <a class="close" data-dismiss="alert">&times;</a>
+         </div>
+       {% elif bwobject.version == 5 %}
+         <div class="alert alert-danger">
+           {{ _('Record has stopped with an error.') }}
+           <a role="button"
+              data-toggle="modal"
+              data-target="#error_details_modal"
+              class="float-right">See details</a>
+           <a class="close" data-dismiss="alert">&times;</a>
+         </div>
+       {% endif %}
+     {%- endblock -%}
+   {%- endblock -%}
+
+  {% block hp_navbar %}
+      <div class="row">
+        <div class="col-md-12">
+          <nav class="navbar navbar-default" role="navigation">
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+              {% block top_left %}
+                <div class="navbar-left">
+                  <a href="{{ url_for('invenio_workflows_ui.list_objects') }}"
+                     class="btn btn-default navbar-btn">{{ _('Back') }}</a>
+                  <a href="#" class="btn btn-default navbar-btn"><i class="fa fa-tasks"></i> <strong>{{ workflow_name|truncate(25, True) }}</strong></a>
+                  {% if bwobject.version != 1 %}
+                    {{ utils.display_current_task(bwobject) }}
+                  {% endif %}
+                </div>
+              {% endblock %}
+              {% block top_center %}
+              {% endblock %}
+              {% block top_right %}
+                <div class="navbar-form navbar-right">
+                  <a {% if not previous_object %}href="#"
+                     {% else %}href="{{ url_for('invenio_workflows_ui.details', objectid=previous_object) }}"{% endif %}
+                     class="btn btn-default"
+                     {% if not previous_object %}disabled="disabled"{% endif %}>
+                    <i class="fa fa-arrow-left"></i>
+                    <strong>{{ _('Previous') }}</strong>
+                  </a>
+                  <a {% if not next_object %}href="#"
+                     {% else %}href="{{ url_for('invenio_workflows_ui.details', objectid=next_object) }}"{% endif %}
+                     class="btn btn-default"
+                     {% if next_object == None %}disabled="disabled"{% endif %}>
+                    <i class="fa fa-arrow-right"></i>
+                    <strong>{{ _('Next') }}</strong>
+                  </a>
+
+                </div>
+              {% endblock %}
+            </div>
+          </nav>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">
+          <div id="alert-message"></div>
+        </div>
+      </div>
+  {% endblock %}
+
+  {% block hp_details_main %}
+    <div class="row">
+      <div class="col-md-12">
+        {% block hp_action_main %}
+          {% if "main" in rendered_actions %}
+            {{ rendered_actions["main"]|safe }}
+          {% endif %}
+        {% endblock %}
+
+        {% block hp_preview %}
+          <div class="row">
+            <div class="col-md-9">
+              <div id="object_preview_container{{ bwobject.id }}"
+                   class="object_preview_container">
+                {{ data_preview|safe }}
+              </div>
+            </div>
+          </div>
+        {% endblock %}
+      </div>
+    </div>
+    {% endblock %}
+
+    {% block hpbody_details %}
+
+      {% block action_side %}
+        <div class="row">
+          <div class="col-md-12">
+            {% if "side" in rendered_actions %}
+              {{ rendered_actions["side"]|safe }}
+            {% endif %}
+         </div>
+       </div>
+     {% endblock %}
+
+    {% block workflow_error %}
+      <div class="row">
+      {% set error_message = bwobject.extra_data._error_msg %}
+      {% if error_message %}
+        <div class="col-md-12">
+        <div class="panel panel-danger">
+          <div class="panel-heading">
+            <h3 class="panel-title">{{ _('Error occurred') }}</h3>
+          </div>
+          <div class="panel-body">
+            <h5>{{ bwobject.extra_data['_last_task_name'] }}</h5>
+
+            <div class="text-right">
+              <h6 id="show-more" class="text-right">
+                <a role="button" data-toggle="modal"
+                   style="cursor: pointer"
+                   data-target="#error_details_modal"
+                   class="float-right">
+                  {{ _('Open details') }}</a>
+              </h6>
+            </div>
+
+            <div class="modal fade" id="error_details_modal" tabindex="-1"
+                 role="dialog" aria-labelledby="myModalLabel"
+                 aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <button type="button" class="close"
+                            data-dismiss="modal"
+                            aria-hidden="true">&times;</button>
+                    <h4 class="modal-title"
+                        id="myModalLabel">{{ _('Problem with') }}: {{ bwobject.extra_data['_last_task_name'] }}</h4>
+                  </div>
+                  <div class="modal-body">
+                    <p>{{ error_message }}</p>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-default"
+                            data-dismiss="modal">{{ _('Close') }}</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+       </div>
+      {% endif %}
+    </div>
+    {% endblock %}
+
+    {% block danger_zone %}
+      <div class="row">
+        <div class="col-md-12">
+          <div class="panel panel-default">
+            <div class="panel-body bg-danger">
+              <div class="row">
+                <div class="col-md-2 text-danger text-center">
+                  <span class="lead"><strong>Danger zone</strong</span>
+                  </div>
+                  <div class="col-md-8 text-danger text-center">
+                    <span class="small">Delete this record from the database - this action cannot be undone</span>
+                  </div>
+                  <div class="col-md-2 text-center">
+                    <a class="btn btn-danger details-action"
+                    role="button"
+                    data-action="delete">
+                    {{ _('Delete') }}
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endblock %}
+
+  {% endblock %}
+
+  </div>
+
+{% endblock %}

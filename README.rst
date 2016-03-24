@@ -47,3 +47,17 @@ UI layer for invenio-workflows.
 
 * Free software: GPLv2 license
 * Documentation: https://pythonhosted.org/invenio-workflows-ui/
+
+
+Configuration
+=============
+
+In order to build assets correctly, you need to modify your instance
+``settings.js`` and add the following to the list of ``paths``:
+
+.. code-block: javascript
+
+    hgn: "node_modules/requirejs-hogan-plugin/hgn",
+    hogan: "node_modules/hogan.js/web/builds/3.0.2/hogan-3.0.2.amd",
+    text: "node_modules/requirejs-hogan-plugin/text",
+    flight: "node_modules/flightjs/build/flight"

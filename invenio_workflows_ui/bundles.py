@@ -31,13 +31,22 @@ from werkzeug.local import LocalProxy
 # Here we exclude base JS bundles like jQuery etc. so that there does
 # not exist several jQuery instances on the site.
 try:
-    from flask import current_app
-    exclude_js = LocalProxy(
-        lambda: current_app.config['THEME_BASE_BUNDLES_EXCLUDE_JS']
-    )
-except KeyError:
     from invenio_theme.bundles import js as _js
-    exclude_js = [_js.contents]
+    exclude_js = [_js.contents[1]]
+except ImportError:
+    from flask import current_app
+    try:
+        exclude_js = LocalProxy(
+            lambda: current_app.config['THEME_BASE_BUNDLES_EXCLUDE_JS']
+        )
+    except KeyError:
+        import warnings
+        warnings.warn(message=(
+            "You are missing THEME_BASE_BUNDLES_EXCLUDE_JS from "
+            "your configuration, which may cause you to have multiple instances"
+            "of libraries like jQuery on your site."
+        ))
+        exclude_js = []
 
 
 js = NpmBundle(
