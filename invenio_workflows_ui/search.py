@@ -130,12 +130,12 @@ def get_holdingpen_objects(tags_list=None,
     #    page=page,
     #    sort=sorting
     #)
-    from invenio_workflows.models import DbWorkflowObject
+    from invenio_workflows.models import WorkflowObject
     ids = [
-        t[0] for t in DbWorkflowObject.query.with_entities(
-            DbWorkflowObject.id
+        t[0] for t in WorkflowObject.query.with_entities(
+            WorkflowObject.id
         ).distinct(
-            DbWorkflowObject.id
+            WorkflowObject.id
         )
     ]
-    return ids, DbWorkflowObject.query.count()
+    return ids, WorkflowObject.query.count()

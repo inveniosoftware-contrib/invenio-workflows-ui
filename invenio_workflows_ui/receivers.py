@@ -25,7 +25,7 @@ from invenio_base.globals import cfg
 
 from sqlalchemy.event import listen
 
-from invenio_workflows.models import DbWorkflowObject
+from invenio_workflows.models import WorkflowObject
 from invenio_workflows.signals import workflow_object_saved
 
 
@@ -67,7 +67,7 @@ def index_holdingpen_record(sender, **kwargs):
         # No workflow registered to object yet. Skip indexing
         return
 
-    if sender.status == DbWorkflowObject.known_statuses.INITIAL:
+    if sender.status == WorkflowObject.known_statuses.INITIAL:
         # Ignore initial status
         return
 
@@ -121,4 +121,4 @@ def index_holdingpen_record(sender, **kwargs):
             id=sender.id
         )
 
-# listen(DbWorkflowObject, "after_delete", delete_from_index)
+# listen(WorkflowObject, "after_delete", delete_from_index)

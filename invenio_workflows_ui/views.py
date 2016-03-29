@@ -24,7 +24,7 @@
 
 """UI layer for invenio-workflows.
 
-Holding Pen is a web interface overlay for all DbWorkflowObject's.
+Holding Pen is a web interface overlay for all WorkflowObject's.
 
 This area is targeted to catalogers and administrators for inspecting
 and reacting to workflows executions. More importantly, allowing users to deal
@@ -59,8 +59,12 @@ from flask_login import login_required
 
 from invenio_db import db
 
-from invenio_workflows.api import continue_oid_delayed, start_delayed
-from invenio_workflows.models import DbWorkflowObject, ObjectStatus, Workflow
+from invenio_workflows import (
+    WorkflowObject,
+    ObjectStatus,
+    Workflow,
+    resume,
+)
 
 from .proxies import actions
 
@@ -89,28 +93,28 @@ blueprint = Blueprint(
 
 # TODO Could we avoid having Yet Another Mapping?
 HOLDINGPEN_WORKFLOW_STATES = {
-    DbWorkflowObject.known_statuses.HALTED: {
-        'message': _(DbWorkflowObject.known_statuses.HALTED.label),
+    WorkflowObject.known_statuses.HALTED: {
+        'message': _(WorkflowObject.known_statuses.HALTED.label),
         'class': 'danger'
     },
-    DbWorkflowObject.known_statuses.WAITING: {
-        'message': _(DbWorkflowObject.known_statuses.WAITING.label),
+    WorkflowObject.known_statuses.WAITING: {
+        'message': _(WorkflowObject.known_statuses.WAITING.label),
         'class': 'warning'
     },
-    DbWorkflowObject.known_statuses.ERROR: {
-        'message': _(DbWorkflowObject.known_statuses.ERROR.label),
+    WorkflowObject.known_statuses.ERROR: {
+        'message': _(WorkflowObject.known_statuses.ERROR.label),
         'class': 'danger'
     },
-    DbWorkflowObject.known_statuses.COMPLETED: {
-        'message': _(DbWorkflowObject.known_statuses.COMPLETED.label),
+    WorkflowObject.known_statuses.COMPLETED: {
+        'message': _(WorkflowObject.known_statuses.COMPLETED.label),
         'class': 'success'
     },
-    DbWorkflowObject.known_statuses.INITIAL: {
-        'message': _(DbWorkflowObject.known_statuses.INITIAL.label),
+    WorkflowObject.known_statuses.INITIAL: {
+        'message': _(WorkflowObject.known_statuses.INITIAL.label),
         'class': 'info'
     },
-    DbWorkflowObject.known_statuses.RUNNING: {
-        'message': _(DbWorkflowObject.known_statuses.RUNNING.label),
+    WorkflowObject.known_statuses.RUNNING: {
+        'message': _(WorkflowObject.known_statuses.RUNNING.label),
         'class': 'warning'
     }
 }
@@ -252,7 +256,7 @@ def list_objects(tags_slug=None):
 #@permission_required(viewholdingpen.name)
 def details(objectid):
     """Display info about the object."""
-    bwobject = DbWorkflowObject.query.get_or_404(objectid)
+    bwobject = WorkflowObject.query.get_or_404(objectid)
 
     # FIXME(jacquerie): to be removed in workflows >= 2.0
     bwobject.data = bwobject.get_data()
@@ -289,7 +293,7 @@ def details(objectid):
 def restart_record_prev():
     """Restart the last task for current object."""
     objectid = request.form["objectid"]
-    continue_oid_delayed(oid=objectid, start_point="restart_task")
+    resume.delay(oid=objectid, start_point="restart_task")
     return jsonify(dict(
         category="success",
         message=_("Object restarted task successfully.")
@@ -303,7 +307,7 @@ def restart_record_prev():
 def delete_from_db():
     """Delete the object from the db."""
     objectid = request.form["objectid"]
-    DbWorkflowObject.delete(objectid)
+    WorkflowObject.delete(objectid)
     db.session.commit()
     return jsonify(dict(
         category="success",
@@ -320,12 +324,14 @@ def resolve_action():
 
     Will call the resolve() function of the specific action.
     """
+    # FIXME: TMP hack
     create_celery_app(current_app)
+
     objectids = request.values.getlist('objectids[]') or []
     ids_resolved = 0
 
     for objectid in objectids:
-        bwobject = DbWorkflowObject.query.get_or_404(objectid)
+        bwobject = WorkflowObject.query.get_or_404(objectid)
         action_name = bwobject.get_action()
 
         if action_name:

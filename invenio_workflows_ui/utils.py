@@ -27,7 +27,7 @@ from math import ceil
 
 from six import text_type
 
-from invenio_workflows.models import DbWorkflowObject
+from invenio_workflows.models import WorkflowObject
 
 from .proxies import current_workflows_ui
 
@@ -120,12 +120,12 @@ def generate_formatted_holdingpen_object(
 
 
 def get_data_types():
-    """Return a list of distinct data types from DbWorkflowObject."""
+    """Return a list of distinct data types from WorkflowObject."""
     return [
-        t[0] for t in DbWorkflowObject.query.with_entities(
-            DbWorkflowObject.data_type
+        t[0] for t in WorkflowObject.query.with_entities(
+            WorkflowObject.data_type
         ).distinct(
-            DbWorkflowObject.data_type
+            WorkflowObject.data_type
         )
     ]
 
@@ -159,7 +159,7 @@ def get_action_list(object_list):
 
 def get_rendered_row(obj_id):
     """Return a single formatted row."""
-    bwo = DbWorkflowObject.query.get(obj_id)  # noqa
+    bwo = WorkflowObject.query.get(obj_id)  # noqa
     if not bwo:
         current_app.logger.error("workflow object not found for {0}".format(obj_id))
         return ""
