@@ -93,7 +93,7 @@ def search(query, per_page, page, sort=None):
     """Return a slice of matched workflow object IDs and total hits."""
     params = {
         "query": query,
-        "index": current_app.config.get("WORKFLOWS_HOLDING_PEN_ES_PREFIX", "") + "*",
+        "index": current_app.config.get("WORKFLOWS_HOLDING_PEN_ES_PREFIX", "holdingpen-") + "*",
         "doc_type": current_app.config.get("WORKFLOWS_HOLDING_PEN_DOC_TYPE", "record"),
         "sort": sort or {},
         "size": min(per_page, 10000),

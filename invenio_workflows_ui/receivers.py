@@ -77,6 +77,7 @@ def index_holdingpen_record(sender, **kwargs):
         sender.extra_data = sender.get_extra_data()
 
     record = Record({})
+    record["version"] = ObjectStatus.labels[sender.status.value]
     record["type"] = sender.data_type
     record["status"] = ObjectStatus.labels[sender.status.value]
     record["created"] = sender.created.isoformat()
@@ -86,6 +87,7 @@ def index_holdingpen_record(sender, **kwargs):
     record["id_user"] = sender.id_user
     record["id_parent"] = sender.id_parent
     record["workflow"] = sender.workflow.name
+
     try:
         record.update(workflow.get_record(sender))
     except Exception as err:
@@ -96,18 +98,16 @@ def index_holdingpen_record(sender, **kwargs):
     except Exception as err:
         current_app.logger.exception(err)
 
-
-
     # Trigger any before_record_index receivers
     # before_record_update.send(sender.id, json=record, index=workflow)
 
     index = current_app.config.get(
         'WORKFLOWS_HOLDING_PEN_ES_PREFIX',
-        "holdingpen_") + workflow.object_type.replace(" ", "_").lower()
+        "holdingpen-") + workflow.object_type.replace(" ", "_").lower()
     es.index(
         index=index,
         doc_type=current_app.config.get("WORKFLOWS_HOLDING_PEN_DOC_TYPE",
-                                        "WORKFLOWS_HOLDING_PEN_DOC_TYPE"),
+                                        "record"),
         body=dict(record),
         id=sender.id
     )
