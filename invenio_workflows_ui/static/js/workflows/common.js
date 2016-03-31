@@ -22,7 +22,7 @@ define(
   [
     'jquery',
     'flight',
-    'hgn!js/workflows/templates/alert',
+    'hgn!js/workflows/templates/alert'
   ],
   function(
     $,
@@ -47,15 +47,13 @@ define(
         alertSelector: "#alert-message"
       });
 
-      this.setAlertMessage = function (ev, data) {
+
+      this.after('initialize', function() {
+        this.on(document, "updateAlertMessage", function (ev, data) {
         $(this.attr.alertSelector).html(tpl_alert_src({
           category: data.category,
           message: data.message
-        }));
-      };
-
-      this.after('initialize', function() {
-        this.on(document, "updateAlertMessage", this.setAlertMessage);
+        }));});
         console.log("Common init");
       });
     }

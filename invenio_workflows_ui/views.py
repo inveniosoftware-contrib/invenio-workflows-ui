@@ -302,14 +302,19 @@ def restart_record_prev():
 #@alert_response_wrapper
 def delete_from_db():
     """Delete the object from the db."""
-    objectid = request.form["objectid"]
-    DbWorkflowObject.delete(objectid)
-    db.session.commit()
-    return jsonify(dict(
-        category="success",
-        message=_("Object deleted successfully.")
-    ))
-
+    objectid = request.form.get("objectid", None)
+    if objectid:
+        DbWorkflowObject.delete(objectid)
+        db.session.commit()
+        return jsonify(dict(
+            category="success",
+            message=_("Object deleted successfully.")
+        ))
+    else:
+        return jsonify(dict(
+            category="danger",
+            message=_("Object doesn't exist.")
+        ))
 
 
 @blueprint.route('/resolve', methods=['GET', 'POST'])

@@ -20,7 +20,7 @@
 """Search functions for Holding Pen interface."""
 
 from flask import current_app
-
+from invenio_search import current_search_client
 
 class Query(object):
     """Search engine implemetation."""
@@ -72,7 +72,7 @@ class Results(object):
 
     def _search(self):
         if self._results is None:
-            self._results = es.search(
+            self._results = current_search_client.search(
                 index=self.index,
                 doc_type=self.doc_type,
                 body=self.body,
@@ -124,18 +124,18 @@ def get_holdingpen_objects(tags_list=None,
             "order": order
         }
     }
-    #return search(
-    #    query=" {0} ".format(operator).join(tags_list),
-    #    per_page=per_page,
-    #    page=page,
-    #    sort=sorting
-    #)
-    from invenio_workflows.models import DbWorkflowObject
-    ids = [
-        t[0] for t in DbWorkflowObject.query.with_entities(
-            DbWorkflowObject.id
-        ).distinct(
-            DbWorkflowObject.id
-        )
-    ]
-    return ids, DbWorkflowObject.query.count()
+    return search(
+       query=" {0} ".format(operator).join(tags_list),
+       per_page=per_page,
+       page=page,
+       sort=sorting
+    )
+    # from invenio_workflows.models import DbWorkflowObject
+    # ids = [
+    #     t[0] for t in DbWorkflowObject.query.with_entities(
+    #         DbWorkflowObject.id
+    #     ).distinct(
+    #         DbWorkflowObject.id
+    #     )
+    # ]
+    # return ids, DbWorkflowObject.query.count()
