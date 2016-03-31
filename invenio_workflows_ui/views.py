@@ -147,7 +147,8 @@ def index():
     halted_state_total = get_holdingpen_objects(
        tags_list=[ObjectStatus.labels[ObjectStatus.HALTED.value]]
    )[1]
-    return render_template('invenio_workflows_ui/index.html',error_state_total=error_state_total,
+    return render_template('invenio_workflows_ui/index.html',
+                           error_state_total=error_state_total,
                            halted_state_total=halted_state_total)
 
 
