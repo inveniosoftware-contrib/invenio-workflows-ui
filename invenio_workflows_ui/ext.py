@@ -101,10 +101,14 @@ class InvenioWorkflowsUI(object):
     def init_config(self, app):
         """Initialize configuration."""
         app.config.setdefault(
-            "INVENIO_WORKFLOWS_UI_BASE_TEMPLATE",
+            "WORKFLOWS_UI_BASE_TEMPLATE",
             app.config.get("BASE_TEMPLATE",
                            "invenio_workflows_ui/base.html"))
         app.config.setdefault("WORKFLOWS_UI_CACHE_PREFIX", "WorkflowsUI::")
+        app.config.setdefault("WORKFLOWS_UI_LIST_TEMPLATE", "invenio_workflows_ui/list.html")
+        app.config.setdefault("WORKFLOWS_UI_DETAILS_TEMPLATE", "invenio_workflows_ui/details.html")
+        app.config.setdefault("WORKFLOWS_UI_LIST_ROW_TEMPLATE", "invenio_workflows_ui/list_row.html")
+        app.config.setdefault("WORKFLOWS_UI_INDEX_TEMPLATE", "invenio_workflows_ui/index.html")
 
     def __getattr__(self, name):
         """Proxy to state object."""

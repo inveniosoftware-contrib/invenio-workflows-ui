@@ -151,8 +151,11 @@ def index():
     halted_state_total = get_holdingpen_objects(
        tags_list=[ObjectStatus.labels[ObjectStatus.HALTED.value]]
    )[1]
-    return render_template('invenio_workflows_ui/index.html',error_state_total=error_state_total,
-                           halted_state_total=halted_state_total)
+    return render_template(
+        current_app.config['WORKFLOWS_UI_INDEX_TEMPLATE'],
+        error_state_total=error_state_total,
+        halted_state_total=halted_state_total
+    )
 
 
 @blueprint.route('/load', methods=['GET', 'POST'])
@@ -240,7 +243,7 @@ def list_objects(tags_slug=None):
         'per_page', session.get('holdingpen_per_page', 25)
     )
     return render_template(
-        'invenio_workflows_ui/list.html',
+        current_app.config['WORKFLOWS_UI_LIST_TEMPLATE'],
         tags=json.dumps(tags_to_print),
         total=get_holdingpen_objects(
             tags_list=tags, per_page=per_page, page=page, sort_key=sort_key
@@ -275,7 +278,7 @@ def details(objectid):
         rendered_actions = {}
 
     return render_template(
-        'invenio_workflows_ui/details.html',
+        current_app.config['WORKFLOWS_UI_DETAILS_TEMPLATE'],
         bwobject=bwobject,
         rendered_actions=rendered_actions,
         data_preview=formatted_data,

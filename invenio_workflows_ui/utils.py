@@ -165,7 +165,7 @@ def get_rendered_row(obj_id):
         return ""
     preformatted = get_formatted_holdingpen_object(bwo)
     return render_template(
-        'invenio_workflows_ui/list_row.html',
+        current_app.config["WORKFLOWS_UI_LIST_ROW_TEMPLATE"],
         title=preformatted.get("title", ""),
         object=bwo,
         action=preformatted.get("action", ""),
