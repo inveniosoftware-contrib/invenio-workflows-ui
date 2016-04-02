@@ -20,27 +20,26 @@
 """Signal receivers for workflows."""
 
 from flask import current_app
-
-from invenio_base.globals import cfg
-
 from sqlalchemy.event import listen
 
-from invenio_workflows.models import WorkflowObject
+from invenio_workflows.models import WorkflowObject, ObjectStatus
 from invenio_workflows.signals import workflow_object_saved
 
 
 def delete_from_index(mapper, connection, target):
     """Delete record from index."""
-    from invenio_ext.es import es
+    from invenio_search import current_search_client as es
 
-    indices = set(cfg['SEARCH_ELASTIC_COLLECTION_INDEX_MAPPING'].values())
-    indices.add(cfg['SEARCH_ELASTIC_DEFAULT_INDEX'])
+    indices = set(current_app.config.get(
+        'SEARCH_ELASTIC_COLLECTION_INDEX_MAPPING').values())
+    indices.add(current_app.config.get('SEARCH_ELASTIC_DEFAULT_INDEX'))
 
     doc_type = current_app.config.get(
         "WORKFLOWS_HOLDING_PEN_DOC_TYPE"
     )
     for index in indices:
-        index = cfg['WORKFLOWS_HOLDING_PEN_ES_PREFIX'] + index
+        index = current_app.config.get(
+            'WORKFLOWS_HOLDING_PEN_ES_PREFIX') + index
         es.delete(
             index=index,
             doc_type=doc_type,
@@ -52,16 +51,10 @@ def delete_from_index(mapper, connection, target):
 @workflow_object_saved.connect
 def index_holdingpen_record(sender, **kwargs):
     """Index a Holding Pen record."""
-    from invenio_ext.es import es
+    from invenio_search import current_search_client as es
     from invenio_records.api import Record
-    from invenio_records.signals import before_record_index
-    from invenio_records.recordext.functions.get_record_collections import (
-        get_record_collections,
-    )
-    from invenio_records.tasks.index import get_record_index
 
-    from .registry import workflows
-    from .models import ObjectStatus
+    from invenio_workflows.proxies import workflows
 
     if not sender.workflow:
         # No workflow registered to object yet. Skip indexing
@@ -84,8 +77,9 @@ def index_holdingpen_record(sender, **kwargs):
         sender.extra_data = sender.get_extra_data()
 
     record = Record({})
+    record["version"] = ObjectStatus.labels[sender.status.value]
     record["type"] = sender.data_type
-    record["status"] = sender.status
+    record["status"] = ObjectStatus.labels[sender.status.value]
     record["created"] = sender.created.isoformat()
     record["modified"] = sender.modified.isoformat()
     record["uri"] = sender.uri
@@ -93,6 +87,7 @@ def index_holdingpen_record(sender, **kwargs):
     record["id_user"] = sender.id_user
     record["id_parent"] = sender.id_parent
     record["workflow"] = sender.workflow.name
+
     try:
         record.update(workflow.get_record(sender))
     except Exception as err:
@@ -103,22 +98,19 @@ def index_holdingpen_record(sender, **kwargs):
     except Exception as err:
         current_app.logger.exception(err)
 
-    # Add collection to get correct mapping
-    record["_collections"] = get_record_collections(record)
-
-    # Depends on "_collections" being filled correctly for record
-    record_index = get_record_index(record)
-
     # Trigger any before_record_index receivers
-    before_record_index.send(sender.id, json=record, index=record_index)
+    # before_record_update.send(sender.id, json=record, index=workflow)
 
-    if record_index:
-        index = cfg['WORKFLOWS_HOLDING_PEN_ES_PREFIX'] + record_index
-        es.index(
-            index=index,
-            doc_type=cfg["WORKFLOWS_HOLDING_PEN_DOC_TYPE"],
-            body=dict(record),
-            id=sender.id
-        )
+    index = current_app.config.get(
+        'WORKFLOWS_HOLDING_PEN_ES_PREFIX',
+        "holdingpen-") + workflow.object_type.replace(" ", "_").lower()
+    es.index(
+        index=index,
+        doc_type=current_app.config.get("WORKFLOWS_HOLDING_PEN_DOC_TYPE",
+                                        "record"),
+        body=dict(record),
+        id=sender.id
+    )
 
-# listen(WorkflowObject, "after_delete", delete_from_index)
+
+listen(WorkflowObject, "after_delete", delete_from_index)

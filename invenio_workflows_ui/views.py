@@ -150,12 +150,10 @@ def index():
     )[1]
     halted_state_total = get_holdingpen_objects(
        tags_list=[ObjectStatus.labels[ObjectStatus.HALTED.value]]
-   )[1]
-    return render_template(
-        current_app.config['WORKFLOWS_UI_INDEX_TEMPLATE'],
-        error_state_total=error_state_total,
-        halted_state_total=halted_state_total
-    )
+    )[1]
+    return render_template(current_app.config['WORKFLOWS_UI_INDEX_TEMPLATE'],
+                           error_state_total=error_state_total,
+                           halted_state_total=halted_state_total)
 
 
 @blueprint.route('/load', methods=['GET', 'POST'])
@@ -306,17 +304,21 @@ def restart_record_prev():
 @blueprint.route('/delete', methods=['GET', 'POST'])
 @login_required
 #@permission_required(viewholdingpen.name)
-#@alert_response_wrapper
 def delete_from_db():
     """Delete the object from the db."""
-    objectid = request.form["objectid"]
-    WorkflowObject.delete(objectid)
-    db.session.commit()
-    return jsonify(dict(
-        category="success",
-        message=_("Object deleted successfully.")
-    ))
-
+    objectid = request.form.get("objectid", None)
+    if objectid:
+        WorkflowObject.delete(objectid)
+        db.session.commit()
+        return jsonify(dict(
+            category="success",
+            message=_("Object deleted successfully.")
+        ))
+    else:
+        return jsonify(dict(
+            category="danger",
+            message=_("Object doesn't exist.")
+        ))
 
 
 @blueprint.route('/resolve', methods=['GET', 'POST'])

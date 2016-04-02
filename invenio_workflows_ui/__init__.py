@@ -28,5 +28,6 @@ from __future__ import absolute_import, print_function
 
 from .ext import InvenioWorkflowsUI
 from .version import __version__
+from .receivers import *
 
 __all__ = ('__version__', 'InvenioWorkflowsUI')

@@ -20,6 +20,7 @@
 """Search functions for Holding Pen interface."""
 
 from flask import current_app
+from invenio_search import current_search_client
 
 
 class Query(object):
@@ -72,7 +73,7 @@ class Results(object):
 
     def _search(self):
         if self._results is None:
-            self._results = es.search(
+            self._results = current_search_client.search(
                 index=self.index,
                 doc_type=self.doc_type,
                 body=self.body,
@@ -93,7 +94,7 @@ def search(query, per_page, page, sort=None):
     """Return a slice of matched workflow object IDs and total hits."""
     params = {
         "query": query,
-        "index": current_app.config.get("WORKFLOWS_HOLDING_PEN_ES_PREFIX", "") + "*",
+        "index": current_app.config.get("WORKFLOWS_HOLDING_PEN_ES_PREFIX", "holdingpen-") + "*",
         "doc_type": current_app.config.get("WORKFLOWS_HOLDING_PEN_DOC_TYPE", "record"),
         "sort": sort or {},
         "size": min(per_page, 10000),
@@ -124,18 +125,9 @@ def get_holdingpen_objects(tags_list=None,
             "order": order
         }
     }
-    #return search(
-    #    query=" {0} ".format(operator).join(tags_list),
-    #    per_page=per_page,
-    #    page=page,
-    #    sort=sorting
-    #)
-    from invenio_workflows.models import WorkflowObject
-    ids = [
-        t[0] for t in WorkflowObject.query.with_entities(
-            WorkflowObject.id
-        ).distinct(
-            WorkflowObject.id
-        )
-    ]
-    return ids, WorkflowObject.query.count()
+    return search(
+       query=" {0} ".format(operator).join(tags_list),
+       per_page=per_page,
+       page=page,
+       sort=sorting
+    )

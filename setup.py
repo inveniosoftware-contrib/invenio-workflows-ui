@@ -22,13 +22,11 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-"""UI layer for invenio-workflows."""
+"""Invenio module which acts as a UI layer for invenio-workflows."""
 
 import os
-import sys
 
 from setuptools import find_packages, setup
-from setuptools.command.test import test as TestCommand
 
 readme = open('README.rst').read()
 history = open('CHANGES.rst').read()
@@ -37,68 +35,47 @@ tests_require = [
     'check-manifest>=0.25',
     'coverage>=4.0',
     'isort>=4.2.2',
-    'pep257>=0.7.0',
+    'pydocstyle>=1.0.0',
     'pytest-cache>=1.0',
     'pytest-cov>=1.8.0',
     'pytest-pep8>=1.0.6',
     'pytest>=2.8.0',
-    "invenio-assets>=1.0.0a1"
 ]
 
 extras_require = {
     'docs': [
         'Sphinx>=1.3',
     ],
+    'postgresql': [
+        'invenio-db[postgresql]>=1.0.0a9',
+    ],
+    'mysql': [
+        'invenio-db[mysql]>=1.0.0a9',
+    ],
+    'sqlite': [
+        'invenio-db>=1.0.0a9',
+    ],
     'tests': tests_require,
 }
 
 extras_require['all'] = []
-for reqs in extras_require.values():
+for name, reqs in extras_require.items():
+    if name in ('mysql', 'postgresql', 'sqlite'):
+        continue
     extras_require['all'].extend(reqs)
 
 setup_requires = [
     'Babel>=1.3',
+    'pytest-runner>=2.6.2',
 ]
 
 install_requires = [
     'Flask-BabelEx>=0.9.2',
+    'invenio-workflows>=1.0.0a1',
 ]
 
 packages = find_packages()
 
-
-class PyTest(TestCommand):
-    """PyTest Test."""
-
-    user_options = [('pytest-args=', 'a', "Arguments to pass to py.test")]
-
-    def initialize_options(self):
-        """Init pytest."""
-        TestCommand.initialize_options(self)
-        self.pytest_args = []
-        try:
-            from ConfigParser import ConfigParser
-        except ImportError:
-            from configparser import ConfigParser
-        config = ConfigParser()
-        config.read('pytest.ini')
-        self.pytest_args = config.get('pytest', 'addopts').split(' ')
-
-    def finalize_options(self):
-        """Finalize pytest."""
-        TestCommand.finalize_options(self)
-        if hasattr(self, '_test_args'):
-            self.test_suite = ''
-        else:
-            self.test_args = []
-            self.test_suite = True
-
-    def run_tests(self):
-        """Run tests."""
-        # import here, cause outside the eggs aren't loaded
-        import pytest
-        errno = pytest.main(self.pytest_args)
-        sys.exit(errno)
 
 # Get the version string. Cannot be done with import!
 g = {}
@@ -111,7 +88,7 @@ setup(
     version=version,
     description=__doc__,
     long_description=readme + '\n\n' + history,
-    keywords='invenio TODO',
+    keywords='invenio workflows gui interface content curation',
     license='GPLv2',
     author='CERN',
     author_email='info@invenio-software.org',
@@ -134,13 +111,6 @@ setup(
             'invenio_workflows_ui_css = invenio_workflows_ui.bundles:css',
             'invenio_workflows_ui_js = invenio_workflows_ui.bundles:js'
         ],
-        # 'invenio_base.api_apps': [],
-        # 'invenio_base.api_blueprints': [],
-        # 'invenio_base.blueprints': [],
-        # 'invenio_celery.tasks': [],
-        # 'invenio_db.models': [],
-        # 'invenio_pidstore.minters': [],
-        # 'invenio_records.jsonresolver': [],
     },
     extras_require=extras_require,
     install_requires=install_requires,
@@ -162,5 +132,4 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Development Status :: 1 - Planning',
     ],
-    cmdclass={'test': PyTest},
 )
