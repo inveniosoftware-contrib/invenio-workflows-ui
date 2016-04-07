@@ -24,7 +24,7 @@
 
 """UI layer for invenio-workflows.
 
-Holding Pen is a web interface overlay for all WorkflowObject's.
+workflows UI is a web interface overlay for all WorkflowObject's.
 
 This area is targeted to catalogers and administrators for inspecting
 and reacting to workflows executions. More importantly, allowing users to deal
@@ -66,58 +66,21 @@ from invenio_workflows import (
     resume,
 )
 
-from .proxies import actions
-
-from .search import get_holdingpen_objects
-from .utils import (
+from ..proxies import actions, searcher
+from ..utils import (
     get_rows,
     get_data_types,
     get_previous_next_objects,
     Pagination
 )
 
-
-
-#
-#
-# from ..acl import viewholdingpen
-
-
 blueprint = Blueprint(
     'invenio_workflows_ui',
     __name__,
-    url_prefix="/holdingpen",
-    template_folder='templates',
-    static_folder='static',
+    url_prefix="/workflows",
+    template_folder='../templates',
+    static_folder='../static',
 )
-
-# TODO Could we avoid having Yet Another Mapping?
-HOLDINGPEN_WORKFLOW_STATES = {
-    WorkflowObject.known_statuses.HALTED: {
-        'message': _(WorkflowObject.known_statuses.HALTED.label),
-        'class': 'danger'
-    },
-    WorkflowObject.known_statuses.WAITING: {
-        'message': _(WorkflowObject.known_statuses.WAITING.label),
-        'class': 'warning'
-    },
-    WorkflowObject.known_statuses.ERROR: {
-        'message': _(WorkflowObject.known_statuses.ERROR.label),
-        'class': 'danger'
-    },
-    WorkflowObject.known_statuses.COMPLETED: {
-        'message': _(WorkflowObject.known_statuses.COMPLETED.label),
-        'class': 'success'
-    },
-    WorkflowObject.known_statuses.INITIAL: {
-        'message': _(WorkflowObject.known_statuses.INITIAL.label),
-        'class': 'info'
-    },
-    WorkflowObject.known_statuses.RUNNING: {
-        'message': _(WorkflowObject.known_statuses.RUNNING.label),
-        'class': 'warning'
-    }
-}
 
 
 def alert_response_wrapper(func):
@@ -139,18 +102,9 @@ def alert_response_wrapper(func):
 @blueprint.route('/index', methods=['GET', 'POST'])
 @login_required
 def index():
-    """
-    Display main interface of Holdingpen.
-
-    Acts as a hub for catalogers (may be removed)
-    """
-    # TODO: Add user filtering
-    error_state_total = get_holdingpen_objects(
-       tags_list=[ObjectStatus.labels[ObjectStatus.ERROR.value]]
-    )[1]
-    halted_state_total = get_holdingpen_objects(
-       tags_list=[ObjectStatus.labels[ObjectStatus.HALTED.value]]
-    )[1]
+    """Display basic dashboard interface of Workflows UI."""
+    error_state_total = searcher.search(ObjectStatus.labels[ObjectStatus.ERROR.value])[1]
+    halted_state_total = searcher.search(ObjectStatus.labels[ObjectStatus.HALTED.value])[1]
     return render_template(current_app.config['WORKFLOWS_UI_INDEX_TEMPLATE'],
                            error_state_total=error_state_total,
                            halted_state_total=halted_state_total)
@@ -158,24 +112,19 @@ def index():
 
 @blueprint.route('/load', methods=['GET', 'POST'])
 @login_required
-#@permission_required(viewholdingpen.name)
-def load(page=1, per_page=0, sort_key="modified"):
+def load():
     """Load objects for the table."""
     tags = request.args.getlist("tags[]") or []  # empty to show all
-    sort_key = request.args.get(
-        'sort_key', session.get('holdingpen_sort_key', "modified")
-    )
-    page = max(page, 1)
-    per_page = per_page or session.get('holdingpen_per_page') or 25
+    query_string = " AND ".join(tags)
+    sort_key = request.args.get('sort_key', "_workflow.modified")
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 25, type=int)
 
-    current_app.logger.debug(tags)
-    ids, total = get_holdingpen_objects(
-        tags_list=tags, per_page=per_page, page=page, sort_key=sort_key
+    results, total = searcher.search(
+        query_string, size=per_page, page=page, sort_key=sort_key
     )
 
-    current_app.logger.debug("Total hits: {0}".format(ids))
-    current_app.logger.debug(ids)
-
+    current_app.logger.debug("Total hits: {0}".format(total))
     pagination = Pagination(page, per_page, total)
 
     # Make sure requested page is within limits.
@@ -203,13 +152,12 @@ def load(page=1, per_page=0, sort_key="modified"):
     }
 
     # Add current ids in table for use by previous/next
-    session['holdingpen_current_ids'] = ids
-    session['holdingpen_sort_key'] = sort_key
-    session['holdingpen_per_page'] = per_page
-    session['holdingpen_page'] = page
-    session['holdingpen_tags'] = tags
+    session['workflows_ui_sort_key'] = sort_key
+    session['workflows_ui_per_page'] = per_page
+    session['workflows_ui_page'] = page
+    session['workflows_ui_tags'] = tags
 
-    table_data["rows"] = get_rows(ids)
+    table_data["rows"] = get_rows(results)
     table_data["rendered_rows"] = "".join(table_data["rows"])
     return jsonify(table_data)
 
@@ -218,12 +166,11 @@ def load(page=1, per_page=0, sort_key="modified"):
 @blueprint.route('/list/', methods=['GET', ])
 @blueprint.route('/list/<tags_slug>', methods=['GET', ])
 @login_required
-#@permission_required(viewholdingpen.name)
 def list_objects(tags_slug=None):
-    """Display main table interface of Holdingpen."""
+    """Display main table interface of workflows UI."""
     tags = [tag for tag in tags_slug.split(' AND ')] if tags_slug \
-        else session.get("holdingpen_tags",
-                         ['version:"{0}"'.format(
+        else session.get("workflows_ui_tags",
+                         ['status:"{0}"'.format(
                              ObjectStatus.labels[ObjectStatus.HALTED.value]
                          )])
 
@@ -232,41 +179,37 @@ def list_objects(tags_slug=None):
         for tag in tags if tag
     ]
     sort_key = request.args.get(
-        'sort_key', session.get('holdingpen_sort_key', "modified")
+        'sort_key', "_workflow.modified"
     )
     page = request.args.get(
-        'page', session.get('holdingpen_page', 1)
+        'page', session.get('workflows_ui_page', 1)
     )
     per_page = request.args.get(
-        'per_page', session.get('holdingpen_per_page', 25)
+        'per_page', session.get('workflows_ui_per_page', 25)
     )
     return render_template(
         current_app.config['WORKFLOWS_UI_LIST_TEMPLATE'],
         tags=json.dumps(tags_to_print),
-        total=get_holdingpen_objects(
-            tags_list=tags, per_page=per_page, page=page, sort_key=sort_key
+        total=searcher.search(
+            query_string=" AND ".join(tags), size=per_page, page=page, sort_key=sort_key
         )[1],
         type_list=get_data_types(),
-        per_page=session.get('holdingpen_per_page')
+        per_page=per_page
     )
 
 
 @blueprint.route('/<int:objectid>', methods=['GET', 'POST'])
 @blueprint.route('/details/<int:objectid>', methods=['GET', 'POST'])
 @login_required
-#@permission_required(viewholdingpen.name)
 def details(objectid):
     """Display info about the object."""
     bwobject = WorkflowObject.query.get_or_404(objectid)
 
-    # FIXME(jacquerie): to be removed in workflows >= 2.0
-    bwobject.data = bwobject.get_data()
-    bwobject.extra_data = bwobject.get_extra_data()
-
     previous_object, next_object = get_previous_next_objects(
-        session.get("holdingpen_current_ids"),
+        session.get("workflows_ui_current_ids"),
         objectid
     )
+
     formatted_data = bwobject.get_formatted_data()
     action_name = bwobject.get_action()
     if action_name:
@@ -286,9 +229,7 @@ def details(objectid):
     )
 
 
-
 @login_required
-#@permission_required(viewholdingpen.name)
 @blueprint.route('/restart_record_prev/', methods=['GET', 'POST'])
 @alert_response_wrapper
 def restart_record_prev():
@@ -303,7 +244,6 @@ def restart_record_prev():
 
 @blueprint.route('/delete', methods=['GET', 'POST'])
 @login_required
-#@permission_required(viewholdingpen.name)
 def delete_from_db():
     """Delete the object from the db."""
     objectid = request.form.get("objectid", None)
@@ -323,7 +263,6 @@ def delete_from_db():
 
 @blueprint.route('/resolve', methods=['GET', 'POST'])
 @login_required
-#@permission_required(viewholdingpen.name)
 def resolve_action():
     """Resolve the action taken.
 

@@ -29,13 +29,13 @@ define(
 
     "use strict";
 
-    return flight.component(HoldingPenUrlUpdater);
+    return flight.component(WorkflowsUIUrlUpdater);
 
-    function HoldingPenUrlUpdater() {
+    function WorkflowsUIUrlUpdater() {
 
       this.attributes({
         and: ' AND ',
-        pathSuffix: 'holdingpen/list',
+        pathSuffix: 'workflows/list',
         listSuffix: 'list/'
       });
 

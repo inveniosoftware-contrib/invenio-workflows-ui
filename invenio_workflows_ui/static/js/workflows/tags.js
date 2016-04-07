@@ -31,10 +31,10 @@ define(
 
     'use strict';
 
-    return flight.component(HoldingPenTags);
+    return flight.component(WorkflowsUITags);
 
     /**
-    * .. js:class:: HoldingPenTags()
+    * .. js:class:: WorkflowsUITags()
     *
     * Component for handling the filter/search available through the
     * bootstrap-tagsinput element.
@@ -42,7 +42,7 @@ define(
     * :param Array tags: list of tags to add from the beginning.
     *
     */
-    function HoldingPenTags() {
+    function WorkflowsUITags() {
 
       this.attributes({
         tags: null
@@ -82,7 +82,7 @@ define(
       this.onTagsUpdate = function(ev, data) {
         var payload = {};
         payload.tags = this.getCurrentTags();
-        this.trigger(document, "reloadHoldingPenTable", payload);
+        this.trigger(document, "reloadWorkflowsUITable", payload);
         this.trigger(document, "update_url", payload);
       };
 
@@ -96,17 +96,17 @@ define(
         this.$node.tagsinput({
             tagClass: function (item) {
                 switch (item.value) {
-                  case 'version:"In process"':
+                  case '_workflow.status:"In process"':
                     return 'label label-warning';
-                  case 'version:"Need action"':
+                  case '_workflow.status:"Need action"':
                     return 'label label-danger';
-                  case 'version:"Waiting"':
+                  case '_workflow.status:"Waiting"':
                     return 'label label-warning';
-                  case 'version:"Done"':
+                  case '_workflow.status:"Done"':
                     return 'label label-success';
-                  case 'version:"New"':
+                  case '_workflow.status:"New"':
                     return 'label label-info';
-                  case 'version:"Error"':
+                  case '_workflow.status:"Error"':
                     return 'label label-danger';
                   default:
                     return 'badge badge-warning';

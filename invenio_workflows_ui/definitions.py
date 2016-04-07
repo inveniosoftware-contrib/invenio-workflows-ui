@@ -19,6 +19,8 @@
 
 """Contains basic workflow types for use in workflow definitions."""
 
+from __future__ import absolute_import, print_function
+
 
 class WorkflowMissing(object):
 
@@ -33,23 +35,26 @@ class WorkflowBase(object):
 
     Interface to define which functions should be imperatively implemented.
 
-    All workflows intended to work well with Holding Pen should inherit from
+    All workflows intended to work well with workflows UI should inherit from
     this class.
     """
 
+    search_index = None
+    search_type = None
+
     @staticmethod
     def get_title(bwo, **kwargs):
-        """Return the value to put in the title column of HoldingPen."""
+        """Return the value to put in the title column of workflow UI."""
         return "No title"
 
     @staticmethod
     def get_description(bwo, **kwargs):
-        """Return the value to put in the title  column of HoldingPen."""
+        """Return the value to put in the title  column of workflow UI."""
         return "No description"
 
     @staticmethod
     def get_additional(bwo, **kwargs):
-        """Return the value to put in the additional column of HoldingPen."""
+        """Return the value to put in the additional column of workflow UI."""
         return ""
 
     @staticmethod
@@ -59,7 +64,7 @@ class WorkflowBase(object):
 
     @staticmethod
     def get_sort_data(obj, **kwargs):
-        """Return a dictionary useful for sorting in Holding Pen."""
+        """Return a dictionary useful for sorting in UI."""
         return {}
 
     @staticmethod
@@ -67,6 +72,6 @@ class WorkflowBase(object):
         """Return a dictionary-like object representing the current object.
 
         This object will be used for indexing and be the basis for display
-        in Holding Pen.
+        in workflows UI.
         """
         return obj.data

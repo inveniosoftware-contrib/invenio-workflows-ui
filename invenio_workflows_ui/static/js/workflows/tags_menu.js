@@ -29,17 +29,17 @@ define(
 
     'use strict';
 
-    return flight.component(HoldingPenTagsMenu);
+    return flight.component(WorkflowsUITagsMenu);
 
     /**
-    * .. js:class:: HoldingPenTagsMenu()
+    * .. js:class:: WorkflowsUITagsMenu()
     *
     * UI Component for a dropdown menu to add to the tagsinput.
     *
     * :param string menuitemSelector: DOM selector for each menu item.
     *
     */
-    function HoldingPenTagsMenu() {
+    function WorkflowsUITagsMenu() {
 
       this.attributes({
         menuitemSelector: "#hp-tags-menu a",

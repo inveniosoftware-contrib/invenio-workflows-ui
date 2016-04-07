@@ -21,7 +21,7 @@ require(
   [
     "js/workflows/common",
     "js/workflows/maintable",
-    "js/workflows/holdingpen",
+    "js/workflows/ui",
     "js/workflows/pagination",
     "js/workflows/perpage_menu",
     "js/workflows/sort_menu",

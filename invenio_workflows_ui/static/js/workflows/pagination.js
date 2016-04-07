@@ -31,16 +31,15 @@ define(
 
     'use strict';
 
-    return flight.component(HoldingPenPagination);
+    return flight.component(WorkflowsUIPagination);
 
     /**
-    * .. js:class:: HoldingPen()
+    * .. js:class:: WorkflowsUI()
     *
-    * Holding Pen table using DataTables (+ plugins)
-    *
+    * workflows UI table
     *
     */
-    function HoldingPenPagination() {
+    function WorkflowsUIPagination() {
       this.attributes({
         paginationButtonSelector: ".pagination a"
       });
@@ -68,7 +67,7 @@ define(
           return;
         } else {
           var page = $(data.el).data("page");
-          this.trigger(document, "reloadHoldingPenTable", {"page": page});
+          this.trigger(document, "reloadWorkflowsUITable", {"page": page});
         }
       };
 

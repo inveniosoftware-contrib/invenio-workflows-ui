@@ -19,12 +19,14 @@
 
 """List the access actions used for authorization."""
 
+from __future__ import absolute_import, print_function
+
 from invenio_ext.principal import Action
 
 
 class viewholdingpen(Action):
 
-    """Access to view Holding Pen."""
+    """Access to view workflows UI."""
 
     optional = True
 

@@ -41,7 +41,7 @@
         :target: https://github.com/inveniosoftware/invenio-workflows-ui/blob/master/LICENSE
 
 
-UI layer for invenio-workflows.
+Invenio module which acts as a UI layer for invenio-workflows.
 
 *This is an experimental developer preview release.*
 

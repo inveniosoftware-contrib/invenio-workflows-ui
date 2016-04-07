@@ -25,6 +25,7 @@
 Authors
 =======
 
-UI layer for invenio-workflows.
+Invenio module which acts as a UI layer for invenio-workflows.
 
-- CERN <info@invenio-software.org>
+- Guillaume Lastecoueres <PX9e@gmx.fr>
+- Jan Aage Lavik <jan.age.lavik@cern.ch>

@@ -44,7 +44,7 @@
         per_page: 10
       };
       initialize(context);
-      $(document).trigger("reloadHoldingPenTable");
+      $(document).trigger("reloadWorkflowsUITable");
     });
   </script>
 
@@ -124,12 +124,12 @@
               <li class="dropdown">
                 <a href="#" class="dropdown-toggle dropdown-headline" data-toggle="dropdown">{{ _('Status') }}<b class="caret"></b></a>
                 <ul id="hp-tags-menu" class="dropdown-menu" role="menu">
-                  <li><a id="version-halted" class="version-selection" name="Need action">{{ _('Need action') }}</a></li>
-                  <li><a id="version-waiting" class="version-selection" name="Waiting">{{ _('Waiting') }}</a></li>
-                  <li><a id="version-completed" class="version-selection" name="Done">{{ _('Done') }}</a></li>
-                  <li><a id="version-running" class="version-selection" name="In process">{{ _('In process') }}</a></li>
-                  <li><a id="version-initial" class="version-selection" name="New">{{ _('New') }}</a></li>
-                  <li><a id="version-error" class="version-selection" name="Error">{{ _('Error') }}</a></li>
+                  <li><a id="status-halted" class="status-selection" name="Need action">{{ _('Need action') }}</a></li>
+                  <li><a id="status-waiting" class="status-selection" name="Waiting">{{ _('Waiting') }}</a></li>
+                  <li><a id="status-completed" class="status-selection" name="Done">{{ _('Done') }}</a></li>
+                  <li><a id="status-running" class="status-selection" name="In process">{{ _('In process') }}</a></li>
+                  <li><a id="status-initial" class="status-selection" name="New">{{ _('New') }}</a></li>
+                  <li><a id="status-error" class="status-selection" name="Error">{{ _('Error') }}</a></li>
                 </ul>
               </li>
             {% endblock %}

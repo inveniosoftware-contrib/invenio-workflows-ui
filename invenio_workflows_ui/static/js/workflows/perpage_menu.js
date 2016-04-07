@@ -29,18 +29,18 @@ define(
 
     'use strict';
 
-    return flight.component(HoldingPenPerPage);
+    return flight.component(WorkflowsUIPerPage);
 
     /**
-    * .. js:class:: HoldingPenPerPage()
+    * .. js:class:: WorkflowsUIPerPage()
     *
-    * Holding Pen per page dropdown.
+    * workflows UI per page dropdown.
     *
     */
-    function HoldingPenPerPage() {
+    function WorkflowsUIPerPage() {
       this.changePerPage = function(ev, data) {
         var per_page = $(ev.target).val();
-        this.trigger(document, "reloadHoldingPenTable", {"per_page": per_page});
+        this.trigger(document, "reloadWorkflowsUITable", {"per_page": per_page});
       };
 
       this.after('initialize', function() {

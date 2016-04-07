@@ -25,7 +25,7 @@ define(
      "js/workflows/details_page"
   ],
   function(
-    HoldingPenCommon,
+    WorkflowsUICommon,
     DetailsActions,
     DetailsActionsButtons,
     DetailsPage) {
@@ -33,7 +33,7 @@ define(
     "use strict";
 
     function initialize(context) {
-      HoldingPenCommon.attachTo(document);
+      WorkflowsUICommon.attachTo(document);
       DetailsActions.attachTo(document, {
         restart_url: context.restart_url,
         delete_url: context.delete_url,

@@ -22,40 +22,24 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-
-"""Module tests."""
+"""Deposit actions."""
 
 from __future__ import absolute_import, print_function
 
-from flask import Flask
-
-from invenio_workflows_ui import InvenioWorkflowsUI
-
-
-def test_version():
-    """Test version import."""
-    from invenio_workflows_ui import __version__
-    assert __version__
+from flask import Blueprint
+from invenio_records_rest.views import create_url_rules
 
 
-def test_init():
-    """Test extension initialization."""
-    app = Flask('testapp')
-    ext = InvenioWorkflowsUI(app)
-    assert 'invenio-workflows-ui' in app.extensions
-    ext.register_action('test_action', "test")
-    assert 'test_action' in app.extensions['invenio-workflows-ui'].actions
-    assert app.extensions['invenio-workflows-ui'].searcher
+def create_blueprint(endpoints):
+    """Create Invenio-Deposit-REST blueprint."""
+    blueprint = Blueprint(
+        'invenio_workflows_rest',
+        __name__,
+        url_prefix='',
+    )
 
-    app = Flask('testapp')
-    ext = InvenioWorkflowsUI()
-    assert 'invenio-workflows-ui' not in app.extensions
-    ext.init_app(app)
-    assert 'invenio-workflows-ui' in app.extensions
+    for endpoint, options in (endpoints or {}).items():
+        for rule in create_url_rules(endpoint, **options):
+            blueprint.add_url_rule(**rule)
 
-
-def test_view(app):
-    """Test view."""
-    with app.test_client() as client:
-        res = client.get("/workflows")
-        assert res.status_code == 200
+    return blueprint

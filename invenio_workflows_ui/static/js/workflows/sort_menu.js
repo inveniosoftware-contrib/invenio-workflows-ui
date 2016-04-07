@@ -29,23 +29,23 @@ define(
 
     'use strict';
 
-    return flight.component(HoldingPenSort);
+    return flight.component(WorkflowsUISort);
 
     /**
-    * .. js:class:: HoldingPenSort()
+    * .. js:class:: WorkflowsUISort()
     *
-    * Holding Pen sorting dropdown.
+    * workflows UI sorting dropdown.
     *
     *
     */
-    function HoldingPenSort() {
+    function WorkflowsUISort() {
       this.attributes({
         sortMenuitemSelector: "#hp-sort-menu a"
       });
 
       this.changeSort = function(ev, data) {
         var sort_key = $(data.el).attr("name");
-        this.trigger(document, "reloadHoldingPenTable", {"sort_key": sort_key});
+        this.trigger(document, "reloadWorkflowsUITable", {"sort_key": sort_key});
       };
 
       this.after('initialize', function() {

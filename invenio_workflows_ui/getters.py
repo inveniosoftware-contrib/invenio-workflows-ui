@@ -22,12 +22,11 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
-"""UI layer for invenio-workflows."""
+"""Data getters."""
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import
 
-from .ext import InvenioWorkflowsUI, InvenioWorkflowsUIREST
-from .version import __version__
-from .receivers import *
 
-__all__ = ('__version__', 'InvenioWorkflowsUI', 'InvenioWorkflowsUIREST')
+def get_data(obj):
+    """Get workflow object data."""
+    return obj.data

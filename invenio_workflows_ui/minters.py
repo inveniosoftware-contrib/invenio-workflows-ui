@@ -22,40 +22,20 @@
 # waive the privileges and immunities granted to it by virtue of its status
 # as an Intergovernmental Organization or submit itself to any jurisdiction.
 
+"""Persistent identifier minters."""
 
-"""Module tests."""
+from __future__ import absolute_import
 
-from __future__ import absolute_import, print_function
+from datetime import datetime
 
-from flask import Flask
-
-from invenio_workflows_ui import InvenioWorkflowsUI
-
-
-def test_version():
-    """Test version import."""
-    from invenio_workflows_ui import __version__
-    assert __version__
+from .providers import WorkflowUIProvider
 
 
-def test_init():
-    """Test extension initialization."""
-    app = Flask('testapp')
-    ext = InvenioWorkflowsUI(app)
-    assert 'invenio-workflows-ui' in app.extensions
-    ext.register_action('test_action', "test")
-    assert 'test_action' in app.extensions['invenio-workflows-ui'].actions
-    assert app.extensions['invenio-workflows-ui'].searcher
-
-    app = Flask('testapp')
-    ext = InvenioWorkflowsUI()
-    assert 'invenio-workflows-ui' not in app.extensions
-    ext.init_app(app)
-    assert 'invenio-workflows-ui' in app.extensions
-
-
-def test_view(app):
-    """Test view."""
-    with app.test_client() as client:
-        res = client.get("/workflows")
-        assert res.status_code == 200
+def workflow_minter(record_uuid, data):
+    """Mint a workflow identifier."""
+    provider = WorkflowUIProvider.create(
+        object_type='rec',
+        object_uuid=record_uuid,
+        pid_value=data["id"],
+    )
+    return provider.pid

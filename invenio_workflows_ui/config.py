@@ -19,64 +19,33 @@
 
 """Config variables for workflows UI module."""
 
-WORKFLOWS_HOLDING_PEN_DOC_TYPE = "record"
-"""The name of the Elasticsearch doc_type to use for Holding Pen records."""
+from __future__ import absolute_import, print_function
 
-WORKFLOWS_HOLDING_PEN_ES_PREFIX = "holdingpen-"
-"""The prefix name of the Elasticsearch indices to use for Holding Pen.
-For each record index, an equivalent is created for Holding Pen."""
 
-WORKFLOWS_HOLDING_PEN_ES_PROPERTIES = {
-    "global_fulltext": {
-        "type": "string",
-        "analyzer": "basic_analyzer"
-    },
-    "global_default": {
-        "type": "string",
-        "analyzer": "basic_analyzer"
-    },
-    "_collections": {
-        "type": "string",
-        "index": "not_analyzed"
-    },
-    "status": {
-        "type": "string",
-        "index": "not_analyzed"
-    },
-    "version": {
-        "type": "string",
-        "index": "not_analyzed"
-    },
-    "type": {
-        "type": "string",
-        "index": "not_analyzed"
-    },
-    "created": {
-        "type": "date"
-    },
-    "modified": {
-        "type": "date"
-    },
-    "uri": {
-        "type": "string",
-        "index": "not_analyzed"
-    },
-    "id_workflow": {
-        "type": "string",
-        "index": "not_analyzed"
-    },
-    "id_user": {
-        "type": "integer",
-        "index": "not_analyzed"
-    },
-    "id_parent": {
-        "type": "integer",
-        "index": "not_analyzed"
-    },
-    "workflow": {
-        "type": "string",
-        "index": "not_analyzed"
-    }
-}
-"""The default properties that should be added to the Holding Pen index
-mappings."""
+WORKFLOWS_UI_SEARCH = dict(
+    search_index='workflows',
+    search_type='record'
+)
+
+WORKFLOWS_UI_REST_ENDPOINTS = dict(
+    workflows=dict(
+        pid_type='wfui',
+        pid_minter='workflow',
+        pid_fetcher='workflow',
+        search_index='workflows',
+        search_type='record',
+        record_class='invenio_workflows_ui.api:WorkflowUIRecord',
+        record_serializers={
+            'application/json': ('invenio_records_rest.serializers'
+                                 ':json_v1_response'),
+        },
+        search_serializers={
+            'application/json': ('invenio_records_rest.serializers'
+                                 ':json_v1_search'),
+        },
+        list_route='/workflows/',
+        item_route='/workflows/<pid_value>',
+        default_media_type='application/json',
+        max_result_window=10000,
+    ),
+)

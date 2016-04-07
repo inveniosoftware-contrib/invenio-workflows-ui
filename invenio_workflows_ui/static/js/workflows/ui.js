@@ -28,17 +28,17 @@ define(
 
     'use strict';
 
-    return flight.component(HoldingPen);
+    return flight.component(WorkflowsUI);
 
     /**
-    * .. js:class:: HoldingPen()
+    * .. js:class:: WorkflowsUI()
     *
-    * Holding Pen table rendering. Trigger "reloadTable" event to render table.
+    * workflows UI table rendering. Trigger "reloadTable" event to render table.
     *
     * :param string load_url: URL to asynchronously load table rows.
     *
     */
-    function HoldingPen() {
+    function WorkflowsUI() {
       var request = false;
 
       this.attributes({
@@ -94,7 +94,7 @@ define(
         });
       };
 
-      this.holdingPenKeyCodes = function(event) {
+      this.workflowUIKeyCodes = function(event) {
         var keyCodes = {
           escKey: 27,
           aKey: 65,
@@ -127,8 +127,8 @@ define(
       };
 
       this.after('initialize', function() {
-        this.on(document, "reloadHoldingPenTable", this.reloadTable);
-        this.on(document, "keydown", this.holdingPenKeyCodes);
+        this.on(document, "reloadWorkflowsUITable", this.reloadTable);
+        this.on(document, "keydown", this.workflowUIKeyCodes);
         console.log("HP init");
       });
     }

@@ -31,17 +31,17 @@ define(
 
     "use strict";
 
-    return flight.component(HoldingPenCommon);
+    return flight.component(WorkflowsUICommon);
 
     /**
-    * .. js:class:: HoldingPenCommon()
+    * .. js:class:: WorkflowsUICommon()
     *
-    * Common utilities throughout Holding Pen.
+    * Common utilities throughout workflows ui.
     *
     * :param string alertSelector:
     *
     */
-    function HoldingPenCommon() {
+    function WorkflowsUICommon() {
       this.attributes({
         // URL
         alertSelector: "#alert-message"

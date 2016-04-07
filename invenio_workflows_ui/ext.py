@@ -28,7 +28,9 @@ from __future__ import absolute_import, print_function
 
 import pkg_resources
 
-from .views import blueprint
+from . import config
+from .views import rest, ui
+from .search import WorkflowUISearch
 
 
 class _WorkflowsUIState(object):
@@ -39,6 +41,7 @@ class _WorkflowsUIState(object):
         self.app = app
         self.actions = {}
         self.cache = cache
+        self.searcher = WorkflowUISearch.create(app)
         if entry_point_group:
             self.load_entry_point_group(entry_point_group)
 
@@ -79,6 +82,55 @@ class _WorkflowsUIState(object):
             self.register_action(ep.name, ep.load())
 
 
+class InvenioWorkflowsUIREST(object):
+    """invenio-workflows-ui extension."""
+
+    def __init__(self, app=None, **kwargs):
+        """Extension initialization."""
+        if app:
+            self._state = self.init_app(app, **kwargs)
+
+    def init_app(self, app,
+                 entry_point_group='invenio_workflows_ui.actions',
+                 **kwargs):
+        """Flask application initialization."""
+        from invenio_records_rest.views import create_blueprint
+
+        self.init_config(app)
+        # app.register_blueprint(blueprint)
+        app.register_blueprint(rest.create_blueprint(
+            app.config['WORKFLOWS_UI_REST_ENDPOINTS']
+        ))
+        state = _WorkflowsUIState(app, entry_point_group=entry_point_group,
+                                  cache=kwargs.get('cache'))
+        app.extensions['invenio-workflows-ui-rest'] = state
+        return state
+
+    def init_config(self, app):
+        """Initialize configuration."""
+        app.config.setdefault(
+            "WORKFLOWS_UI_BASE_TEMPLATE",
+            app.config.get("BASE_TEMPLATE",
+                           "invenio_workflows_ui/base.html"))
+        app.config.setdefault("WORKFLOWS_UI_CACHE_PREFIX",
+                              "WorkflowsUI::")
+        app.config.setdefault("WORKFLOWS_UI_LIST_TEMPLATE",
+                              "invenio_workflows_ui/list.html")
+        app.config.setdefault("WORKFLOWS_UI_DETAILS_TEMPLATE",
+                              "invenio_workflows_ui/details.html")
+        app.config.setdefault("WORKFLOWS_UI_LIST_ROW_TEMPLATE",
+                              "invenio_workflows_ui/list_row.html")
+        app.config.setdefault("WORKFLOWS_UI_INDEX_TEMPLATE",
+                              "invenio_workflows_ui/index.html")
+        for k in dir(config):
+            if k.startswith('WORKFLOWS_UI_'):
+                app.config.setdefault(k, getattr(config, k))
+
+    def __getattr__(self, name):
+        """Proxy to state object."""
+        return getattr(self._state, name, None)
+
+
 class InvenioWorkflowsUI(object):
     """invenio-workflows-ui extension."""
 
@@ -92,7 +144,7 @@ class InvenioWorkflowsUI(object):
                  **kwargs):
         """Flask application initialization."""
         self.init_config(app)
-        app.register_blueprint(blueprint)
+        app.register_blueprint(ui.blueprint)
         state = _WorkflowsUIState(app, entry_point_group=entry_point_group,
                                   cache=kwargs.get('cache'))
         app.extensions['invenio-workflows-ui'] = state
@@ -104,11 +156,19 @@ class InvenioWorkflowsUI(object):
             "WORKFLOWS_UI_BASE_TEMPLATE",
             app.config.get("BASE_TEMPLATE",
                            "invenio_workflows_ui/base.html"))
-        app.config.setdefault("WORKFLOWS_UI_CACHE_PREFIX", "WorkflowsUI::")
-        app.config.setdefault("WORKFLOWS_UI_LIST_TEMPLATE", "invenio_workflows_ui/list.html")
-        app.config.setdefault("WORKFLOWS_UI_DETAILS_TEMPLATE", "invenio_workflows_ui/details.html")
-        app.config.setdefault("WORKFLOWS_UI_LIST_ROW_TEMPLATE", "invenio_workflows_ui/list_row.html")
-        app.config.setdefault("WORKFLOWS_UI_INDEX_TEMPLATE", "invenio_workflows_ui/index.html")
+        app.config.setdefault("WORKFLOWS_UI_CACHE_PREFIX",
+                              "WorkflowsUI::")
+        app.config.setdefault("WORKFLOWS_UI_LIST_TEMPLATE",
+                              "invenio_workflows_ui/list.html")
+        app.config.setdefault("WORKFLOWS_UI_DETAILS_TEMPLATE",
+                              "invenio_workflows_ui/details.html")
+        app.config.setdefault("WORKFLOWS_UI_LIST_ROW_TEMPLATE",
+                              "invenio_workflows_ui/list_row.html")
+        app.config.setdefault("WORKFLOWS_UI_INDEX_TEMPLATE",
+                              "invenio_workflows_ui/index.html")
+        for k in dir(config):
+            if k.startswith('WORKFLOWS_UI_'):
+                app.config.setdefault(k, getattr(config, k))
 
     def __getattr__(self, name):
         """Proxy to state object."""
