@@ -22,30 +22,25 @@
 from __future__ import absolute_import, print_function
 
 
-WORKFLOWS_UI_SEARCH = dict(
-    search_index='workflows',
-    search_type='record'
+WORKFLOWS_UI_REST_ENDPOINT = dict(
+    workflow_object_serializers={
+        'application/json': ('invenio_workflows_ui.serializers'
+                             ':json_serializer'),
+    },
+    search_serializers={
+        'application/json': ('invenio_workflows_ui.serializers'
+                             ':json_search_serializer'),
+    },
+    list_route='/workflows/',
+    item_route='/workflows/<object_id>',
+    search_index="workflows",
+    default_media_type='application/json',
+    max_result_window=10000,
 )
 
-WORKFLOWS_UI_REST_ENDPOINTS = dict(
-    workflows=dict(
-        pid_type='wfui',
-        pid_minter='workflow',
-        pid_fetcher='workflow',
+WORKFLOWS_UI_DATA_TYPES = dict(
+    workflow=dict(
         search_index='workflows',
         search_type='record',
-        record_class='invenio_workflows_ui.api:WorkflowUIRecord',
-        record_serializers={
-            'application/json': ('invenio_records_rest.serializers'
-                                 ':json_v1_response'),
-        },
-        search_serializers={
-            'application/json': ('invenio_records_rest.serializers'
-                                 ':json_v1_search'),
-        },
-        list_route='/workflows/',
-        item_route='/workflows/<pid_value>',
-        default_media_type='application/json',
-        max_result_window=10000,
     ),
 )

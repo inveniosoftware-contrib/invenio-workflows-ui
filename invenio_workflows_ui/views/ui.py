@@ -235,7 +235,7 @@ def details(objectid):
 def restart_record_prev():
     """Restart the last task for current object."""
     objectid = request.form["objectid"]
-    resume.delay(oid=objectid, start_point="restart_task")
+    resume.delay(oid=objectid, restart_point="restart_task")
     return jsonify(dict(
         category="success",
         message=_("Object restarted task successfully.")

@@ -25,7 +25,7 @@
 
 from __future__ import absolute_import, print_function
 
-import uuid
+import six
 
 from flask import current_app
 
@@ -45,7 +45,7 @@ class WorkflowUIRecord(Record):
     """Represents a workflow object record for indexing."""
 
     @classmethod
-    def create(cls, workflow_object, id_=None, **kwargs):
+    def create(cls, workflow_object, **kwargs):
         """Create a indexable workflow JSON."""
         if not workflow_object.workflow:
             # No workflow registered to object yet. Skip indexing
@@ -62,20 +62,15 @@ class WorkflowUIRecord(Record):
                 )
             )
         record = cls.build_from_workflow_object(workflow_object)
-        id_ = id_ or uuid.uuid4()
-        pid = workflow_minter(id_, record)
         return cls(record, **kwargs)
 
     @classmethod
-    def get_record(cls, id, with_deleted=False):
+    def get_record(cls, id_, with_deleted=False):
         """Get record instance.
         Raises database exception if record does not exists.
         """
         with db.session.no_autoflush:
-            pid = PersistentIdentifier.get_by_object(
-                pid_type='wfui', object_type='rec', object_uuid=id
-            )
-            query = WorkflowObject.query.filter_by(id=pid.pid_value)
+            query = WorkflowObject.query.filter_by(id=id_)
             obj = query.one()
             return cls(cls.build_from_workflow_object(obj))
 
@@ -85,16 +80,19 @@ class WorkflowUIRecord(Record):
         workflow_definition = workflows.get(workflow_object.workflow.name)
         record = {}
         record["id"] = workflow_object.id
-        if hasattr(workflow_definition, 'data_type'):
-            data_type = workflow_definition.data_type
+        if not workflow_object.data_type:
+            if hasattr(workflow_definition, 'data_type'):
+                data_type = workflow_definition.data_type
+            else:
+                data_type = "workflow"
         else:
             data_type = workflow_object.data_type
         record["_workflow"] = {}
-        record["_workflow"]["type"] = data_type
+        record["_workflow"]["data_type"] = data_type
         record["_workflow"]["status"] = ObjectStatus.labels[workflow_object.status.value]
         record["_workflow"]["created"] = workflow_object.created.isoformat()
         record["_workflow"]["modified"] = workflow_object.modified.isoformat()
-        record["_workflow"]["id_workflow"] = workflow_object.id_workflow
+        record["_workflow"]["id_workflow"] = six.text_type(workflow_object.id_workflow)
         record["_workflow"]["id_user"] = workflow_object.id_user
         record["_workflow"]["id_parent"] = workflow_object.id_parent
         record["_workflow"]["workflow"] = workflow_object.workflow.name
@@ -105,8 +103,8 @@ class WorkflowUIRecord(Record):
 
     def index(self, index_name=None, doc_type=None):
         """Index the workflow record into desired index/doc_type."""
-        config = current_app.config['WORKFLOWS_UI_REST_ENDPOINTS'].get(
-            self["_workflow"]["type"]
+        config = current_app.config['WORKFLOWS_UI_DATA_TYPES'].get(
+            self["_workflow"]["data_type"]
         )
         if config or (index_name and doc_type):
             current_search_client.index(
@@ -119,8 +117,8 @@ class WorkflowUIRecord(Record):
     @staticmethod
     def delete_from_index(workflow_object, index=None, doc_type=None):
         """Delete given record from index."""
-        config = current_app.config['WORKFLOWS_UI_REST_ENDPOINTS'].get(
-            self["_workflow"]["type"]
+        config = current_app.config['WORKFLOWS_UI_DATA_TYPES'].get(
+            self["_workflow"]["data_type"]
         )
         if config or (index_name and doc_type):
             current_search_client.delete(

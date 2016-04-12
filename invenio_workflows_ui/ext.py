@@ -41,7 +41,7 @@ class _WorkflowsUIState(object):
         self.app = app
         self.actions = {}
         self.cache = cache
-        self.searcher = WorkflowUISearch.create(app)
+        self.searcher = None # WorkflowUISearch.create(app)
         if entry_point_group:
             self.load_entry_point_group(entry_point_group)
 
@@ -94,12 +94,10 @@ class InvenioWorkflowsUIREST(object):
                  entry_point_group='invenio_workflows_ui.actions',
                  **kwargs):
         """Flask application initialization."""
-        from invenio_records_rest.views import create_blueprint
-
         self.init_config(app)
         # app.register_blueprint(blueprint)
         app.register_blueprint(rest.create_blueprint(
-            app.config['WORKFLOWS_UI_REST_ENDPOINTS']
+            app.config['WORKFLOWS_UI_REST_ENDPOINT']
         ))
         state = _WorkflowsUIState(app, entry_point_group=entry_point_group,
                                   cache=kwargs.get('cache'))

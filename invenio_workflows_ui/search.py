@@ -21,13 +21,17 @@
 
 from __future__ import absolute_import, print_function
 
+from flask import request
+
 from invenio_search import current_search_client, Query
 
 from .utils import obj_or_import_string
 
 
-def default_query_factory(search, query_string, page, size):
+def default_query_factory(index, page, size):
     """Create default ES query based on query-string pattern."""
+    query_string = request.values.get('q', '')
+
     query = Query()
     if query_string.strip():
         query.body['query'] = dict(
@@ -36,14 +40,13 @@ def default_query_factory(search, query_string, page, size):
                 allow_leading_wildcard=False,
             )
         )
-    # only return ids
-    query.body['fields'] = []
-    query = query[(page - 1) * size:page * size]
-    return query
+    query = query[(page-1)*size:page*size]
+    return (query, {'q': query_string})
 
 
-def default_sorter_factory(search, query, sort_key):
+def default_sorter_factory(query, index, sort_arg_name="sort"):
     """Add sorting parameters to query body."""
+    sort_key = request.args.get(sort_arg_name, "_workflow.modified", type=str)
     if sort_key.endswith("_desc"):
         order = "desc"
         sort_key = sort_key[:-5]
@@ -51,14 +54,14 @@ def default_sorter_factory(search, query, sort_key):
         order = "asc"
 
     if not sort_key:
-        sort_key = "modified"
+        sort_key = "_workflow.modified"
 
     sorting = {
         sort_key: {
             "order": order
         }
     }
-    return query.sort(*[sorting])
+    return query.sort(*[sorting]), {sort_arg_name: sort_key}
 
 
 class WorkflowUISearch(object):
@@ -83,12 +86,18 @@ class WorkflowUISearch(object):
         if not app:
             from flask import current_app
             app = current_app
-        return WorkflowUISearch(**app.config['WORKFLOWS_UI_SEARCH'])
+        return WorkflowUISearch(**app.config['WORKFLOWS_UI_DATA_TYPES'])
 
-    def search(self, query_string, size=25, page=1, sort_key="_workflow.modified"):
+    def search(self, size=25, page=1):
         """Return search results for query."""
-        query = self.query_factory(self, query_string, page, size)
-        query = self.sorter_factory(self, query, sort_key)
+        # Arguments that must be added in prev/next links
+        urlkwargs = dict()
+
+        query, qs_kwargs = self.query_factory(self.search_index, page, size)
+        urlkwargs.update(qs_kwargs)
+
+        query, qs_kwargs = self.sorter_factory(query, self.search_index)
+        urlkwargs.update(qs_kwargs)
 
         search_result = current_search_client.search(
             index=self.search_index,
@@ -96,4 +105,4 @@ class WorkflowUISearch(object):
             body=query.body,
             version=True,
         )
-        return search_result, int(search_result['hits']['total'])
+        return urlkwargs, search_result
