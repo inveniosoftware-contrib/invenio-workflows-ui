@@ -125,13 +125,9 @@ def generate_formatted_workflow_object(
 
 def get_data_types():
     """Return a list of distinct data types from WorkflowObject."""
-    return [
-        t[0] for t in WorkflowObject.query.with_entities(
-            WorkflowObject.data_type
-        ).distinct(
-            WorkflowObject.data_type
-        )
-    ]
+    return list(
+        current_app.config.get('WORKFLOWS_UI_DATA_TYPES', dict()).keys()
+    )
 
 
 def get_rendered_row(obj_id):

@@ -28,9 +28,10 @@ from invenio_search import current_search_client, Query
 from .utils import obj_or_import_string
 
 
-def default_query_factory(index, page, size):
+def default_query_factory(index, page, size, query_string=None):
     """Create default ES query based on query-string pattern."""
-    query_string = request.values.get('q', '')
+    if not query_string:
+        query_string = request.values.get('q', '')
 
     query = Query()
     if query_string.strip():
@@ -44,9 +45,13 @@ def default_query_factory(index, page, size):
     return (query, {'q': query_string})
 
 
-def default_sorter_factory(query, index, sort_arg_name="sort"):
+def default_sorter_factory(query, index, sort_key=None):
     """Add sorting parameters to query body."""
-    sort_key = request.args.get(sort_arg_name, "_workflow.modified", type=str)
+    sort_arg_name = "sort"
+    if not sort_key:
+        sort_key = request.args.get(
+            sort_arg_name, "_workflow.modified", type=str
+        )
     if sort_key.endswith("_desc"):
         order = "desc"
         sort_key = sort_key[:-5]
@@ -86,17 +91,22 @@ class WorkflowUISearch(object):
         if not app:
             from flask import current_app
             app = current_app
-        return WorkflowUISearch(**app.config['WORKFLOWS_UI_DATA_TYPES'])
+        search_index = app.config['WORKFLOWS_UI_REST_ENDPOINT'].get('search_index')
+        return WorkflowUISearch(search_index=search_index)
 
-    def search(self, size=25, page=1):
+    def search(self, size=25, page=1, query_string=None, sort_key=None):
         """Return search results for query."""
         # Arguments that must be added in prev/next links
         urlkwargs = dict()
 
-        query, qs_kwargs = self.query_factory(self.search_index, page, size)
+        query, qs_kwargs = self.query_factory(
+            self.search_index, page, size, query_string
+        )
         urlkwargs.update(qs_kwargs)
 
-        query, qs_kwargs = self.sorter_factory(query, self.search_index)
+        query, qs_kwargs = self.sorter_factory(
+            query, self.search_index, sort_key
+        )
         urlkwargs.update(qs_kwargs)
 
         search_result = current_search_client.search(

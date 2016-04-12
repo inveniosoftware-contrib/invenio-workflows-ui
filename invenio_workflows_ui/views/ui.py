@@ -103,8 +103,13 @@ def alert_response_wrapper(func):
 @login_required
 def index():
     """Display basic dashboard interface of Workflows UI."""
-    error_state_total = searcher.search(ObjectStatus.labels[ObjectStatus.ERROR.value])[1]
-    halted_state_total = searcher.search(ObjectStatus.labels[ObjectStatus.HALTED.value])[1]
+    q = '_workflow.status:"{0}"'
+    error_state_total = searcher.search(
+        query_string=q.format(ObjectStatus.labels[ObjectStatus.ERROR.value])
+    )[1]['hits']['total']
+    halted_state_total = searcher.search(
+        query_string=q.format(ObjectStatus.labels[ObjectStatus.HALTED.value])
+    )[1]['hits']['total']
     return render_template(current_app.config['WORKFLOWS_UI_INDEX_TEMPLATE'],
                            error_state_total=error_state_total,
                            halted_state_total=halted_state_total)
@@ -120,10 +125,10 @@ def load():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 25, type=int)
 
-    results, total = searcher.search(
-        query_string, size=per_page, page=page, sort_key=sort_key
+    __, results = searcher.search(
+        query_string=query_string, size=per_page, page=page, sort_key=sort_key
     )
-
+    total = int(results['hits']['total'])
     current_app.logger.debug("Total hits: {0}".format(total))
     pagination = Pagination(page, per_page, total)
 
@@ -192,7 +197,7 @@ def list_objects(tags_slug=None):
         tags=json.dumps(tags_to_print),
         total=searcher.search(
             query_string=" AND ".join(tags), size=per_page, page=page, sort_key=sort_key
-        )[1],
+        )[1]['hits']['total'],
         type_list=get_data_types(),
         per_page=per_page
     )

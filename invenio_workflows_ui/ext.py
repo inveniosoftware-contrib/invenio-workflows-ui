@@ -41,7 +41,7 @@ class _WorkflowsUIState(object):
         self.app = app
         self.actions = {}
         self.cache = cache
-        self.searcher = None # WorkflowUISearch.create(app)
+        self.searcher = WorkflowUISearch.create(app)
         if entry_point_group:
             self.load_entry_point_group(entry_point_group)
 
