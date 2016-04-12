@@ -255,3 +255,19 @@ class WorkflowObjectResource(ContentNegotiatedMethodView):
         :returns: The requested record.
         """
         return self.make_response(workflow_object)
+
+    @pass_workflow_object
+    # @need_record_permission('delete_permission_factory')
+    def delete(self, workflow_object, **kwargs):
+        """Delete a workflow_object.
+
+        :param workflow_object: Workflow object.
+        """
+        try:
+            WorkflowObject.delete(workflow_object.id)
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            current_app.logger.exception('Failed to delete workflow object.')
+            abort(500)
+        return '', 204

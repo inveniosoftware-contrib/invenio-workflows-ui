@@ -247,25 +247,6 @@ def restart_record_prev():
     ))
 
 
-@blueprint.route('/delete', methods=['GET', 'POST'])
-@login_required
-def delete_from_db():
-    """Delete the object from the db."""
-    objectid = request.form.get("objectid", None)
-    if objectid:
-        WorkflowObject.delete(objectid)
-        db.session.commit()
-        return jsonify(dict(
-            category="success",
-            message=_("Object deleted successfully.")
-        ))
-    else:
-        return jsonify(dict(
-            category="danger",
-            message=_("Object doesn't exist.")
-        ))
-
-
 @blueprint.route('/resolve', methods=['GET', 'POST'])
 @login_required
 def resolve_action():
