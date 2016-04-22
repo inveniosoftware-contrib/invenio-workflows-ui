@@ -108,7 +108,8 @@ class InvenioWorkflowsUIREST(object):
         state = _WorkflowsUIState(app, entry_point_group=entry_point_group,
                                   cache=kwargs.get('cache'))
         app.register_blueprint(rest.create_blueprint(
-            app.config['WORKFLOWS_UI_REST_ENDPOINT']
+            app.config['WORKFLOWS_UI_REST_ENDPOINT'],
+            app.config['WORKFLOWS_UI_TEMPLATE_CONTEXT_PROCESSORS']
         ))
         app.extensions['invenio-workflows-ui'] = state
         return state
@@ -133,7 +134,8 @@ class InvenioWorkflowsUI(object):
         state = _WorkflowsUIState(app, entry_point_group=entry_point_group,
                                   cache=kwargs.get('cache'))
         app.register_blueprint(ui.create_blueprint(
-            app.config['WORKFLOWS_UI_URL']
+            app.config['WORKFLOWS_UI_URL'],
+            app.config['WORKFLOWS_UI_TEMPLATE_CONTEXT_PROCESSORS']
         ))
         app.extensions['invenio-workflows-ui'] = state
         return state

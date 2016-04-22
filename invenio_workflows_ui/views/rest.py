@@ -57,7 +57,7 @@ from ..tasks import resolve_actions
 from ..utils import obj_or_import_string
 
 
-def create_blueprint(config):
+def create_blueprint(config, context_processors):
     """Create Invenio-Deposit-REST blueprint with all views."""
     blueprint = Blueprint(
         'invenio_workflows_rest',
@@ -143,6 +143,9 @@ def create_blueprint(config):
 
     for rule in views:
         blueprint.add_url_rule(**rule)
+
+    for proc in context_processors:
+        blueprint.context_processor(obj_or_import_string(proc))
 
     return blueprint
 

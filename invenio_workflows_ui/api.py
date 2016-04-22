@@ -77,8 +77,7 @@ class WorkflowUIRecord(Record):
         # NOTE: This entire function may in principle be in invenio_workflows
         # WorkflowObject model as a to_dict() kind of function of the model.
         workflow_definition = workflows.get(workflow_object.workflow.name)
-        record = {}
-        record["id"] = workflow_object.id
+
         if not workflow_object.data_type:
             if workflow_definition and hasattr(workflow_definition, 'data_type'):
                 data_type = workflow_definition.data_type
@@ -86,6 +85,13 @@ class WorkflowUIRecord(Record):
                 data_type = "workflow"
         else:
             data_type = workflow_object.data_type
+
+        if workflow_definition and hasattr(workflow_definition, 'name'):
+            workflow_name = workflow_definition.name
+        else:
+            workflow_name = None
+        record = {}
+        record["id"] = workflow_object.id
         record["_workflow"] = {}
         record["_workflow"]["data_type"] = data_type
         record["_workflow"]["status"] = ObjectStatus.labels[workflow_object.status.value]
@@ -94,7 +100,9 @@ class WorkflowUIRecord(Record):
         record["_workflow"]["id_workflow"] = six.text_type(workflow_object.id_workflow)
         record["_workflow"]["id_user"] = workflow_object.id_user
         record["_workflow"]["id_parent"] = workflow_object.id_parent
-        record["_workflow"]["workflow"] = workflow_object.workflow.name
+        record["_workflow"]["workflow_class"] = workflow_object.workflow.name
+        record["_workflow"]["workflow_position"] = str(workflow_object.callback_pos)
+        record["_workflow"]["workflow_name"] = workflow_name
 
         if isinstance(workflow_object.data, dict):
             record.update(workflow_object.data)
@@ -109,11 +117,17 @@ class WorkflowUIRecord(Record):
 
     def restart(self, *args, **kwargs):
         """Resume execution from current task/callback in workflow."""
-        return resume.delay(oid=self.model.id, restart_point="restart_task")
+        return resume.delay(
+            oid=self.model.id,
+            restart_point="restart_task"
+        ).id
 
     def resume(self, *args, **kwargs):
         """Resume execution from next task/callback in workflow."""
-        return resume.delay(oid=self.model.id, restart_point="continue_task")
+        return resume.delay(
+            oid=self.model.id,
+            restart_point="continue_task"
+        ).id
 
     def index(self, index_name=None, doc_type=None):
         """Index the workflow record into desired index/doc_type."""

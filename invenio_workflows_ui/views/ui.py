@@ -61,12 +61,14 @@ from ..proxies import actions, searcher
 from ..utils import (
     get_rows,
     get_data_types,
+    get_workflow_names,
     get_previous_next_objects,
-    Pagination
+    Pagination,
+    obj_or_import_string
 )
 
 
-def create_blueprint(endpoint):
+def create_blueprint(endpoint, context_processors):
     """Create UI blueprint for invenio-workflows-ui."""
 
     blueprint = Blueprint(
@@ -173,6 +175,7 @@ def create_blueprint(endpoint):
                 query_string=search_value, size=per_page, page=page, sort_key=sort_key
             )[1]['hits']['total'],
             type_list=get_data_types(),
+            name_list=get_workflow_names(),
             per_page=per_page
         )
 
@@ -206,5 +209,8 @@ def create_blueprint(endpoint):
             previous_object_id=previous_object_id,
             next_object_id=next_object_id,
         )
+
+    for proc in context_processors:
+        blueprint.context_processor(obj_or_import_string(proc))
 
     return blueprint

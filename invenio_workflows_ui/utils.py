@@ -31,7 +31,7 @@ from six import text_type, string_types
 
 from werkzeug import import_string
 
-from invenio_workflows.models import WorkflowObject
+from invenio_workflows import WorkflowObject, workflows
 
 from .proxies import current_workflows_ui
 
@@ -128,6 +128,12 @@ def get_data_types():
     return list(
         current_app.config.get('WORKFLOWS_UI_DATA_TYPES', dict()).keys()
     )
+
+
+def get_workflow_names():
+    """Return a list of distinct data types from WorkflowObject."""
+    return [workflow.name for workflow in workflows.values()
+            if hasattr(workflow, 'name')]
 
 
 def get_rendered_row(obj_id):

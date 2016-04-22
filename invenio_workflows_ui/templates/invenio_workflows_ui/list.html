@@ -75,9 +75,9 @@
             {% endblock %}
           </ul>
           {% block navigation_search_filter %}
-          <form class="navbar-form navbar-left" role="search">
+          <form id="list-search-input-wrapper" class="navbar-form navbar-left" role="search">
             <div class="form-group">
-              <input id="search-input" type="text" class="form-control" placeholder="{{ _("Add to search") }}" value="{{ search }}">
+              <input id="search-input" maxlength="40" type="text" class="form-control" placeholder="{{ _("Add to search") }}" value="{{ search }}">
             </div>
           </form>
           {% endblock %}
@@ -95,6 +95,21 @@
           </ul>
           {% endblock %}
           <ul class="nav navbar-nav navbar-right">
+            {% block navigation_name_selection %}
+              {% if type_list %}
+              <li class="dropdown">
+                <a class="dropdown-toggle dropdown-headline" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">{{ _('Workflow') }}<b class="caret"></b></a>
+                <ul id="hp-name-menu" class="dropdown-menu">
+                  {% for name in name_list %}
+                    <li>
+                      <a class="task-btn" name="{{name}}">{{ name }}</a>
+                    </li>
+                  {% endfor %}
+                </ul>
+              </li>
+              {% endif %}
+
+            {% endblock %}
             {% block navigation_type_selection %}
               {% if type_list %}
               <li class="dropdown">

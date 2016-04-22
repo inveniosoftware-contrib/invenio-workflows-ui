@@ -54,7 +54,11 @@ define(
     });
     WorkflowsUITagsMenu.attachTo("#hp-type-menu", {
       menuitemSelector: "#hp-type-menu a",
-      valuePrefix: "_workflow.type:"
+      valuePrefix: "_workflow.data_type:"
+    });
+    WorkflowsUITagsMenu.attachTo("#hp-name-menu", {
+      menuitemSelector: "#hp-name-menu a",
+      valuePrefix: "_workflow.workflow_name:"
     });
     WorkflowsUISelection.attachTo(document);
     WorkflowsUIUrlUpdater.attachTo(document, {

@@ -26,6 +26,10 @@
   margin-top: 10px;
 }
 
+#list-search-input-wrapper {
+  max-width: 500px;
+}
+
 .row-action {
   width: 10%;
   text-align: right;

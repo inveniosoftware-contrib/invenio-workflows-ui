@@ -24,6 +24,7 @@ from __future__ import absolute_import, print_function
 WORKFLOWS_UI_URL = "/workflows"
 WORKFLOWS_UI_API_URL = "/api/workflows/"
 
+WORKFLOWS_UI_TEMPLATE_CONTEXT_PROCESSORS = []
 WORKFLOWS_UI_REST_ENDPOINT = dict(
     workflow_object_serializers={
         'application/json': ('invenio_workflows_ui.serializers'

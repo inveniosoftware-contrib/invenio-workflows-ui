@@ -32,7 +32,15 @@
                     "type": "integer",
                     "index": "not_analyzed"
                 },
-                "workflow": {
+                "workflow_class": {
+                    "type": "string",
+                    "index": "not_analyzed"
+                }
+                "workflow_name": {
+                    "type": "string",
+                    "index": "not_analyzed"
+                }
+                "workflow_position": {
                     "type": "string",
                     "index": "not_analyzed"
                 }
