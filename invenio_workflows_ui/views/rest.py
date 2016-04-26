@@ -28,7 +28,7 @@ from __future__ import absolute_import, print_function
 
 import os
 
-from functools import wraps
+from functools import partial, wraps
 
 from flask import (
     abort,
@@ -41,17 +41,14 @@ from flask import (
 
 from invenio_db import db
 from invenio_rest import ContentNegotiatedMethodView
-from invenio_rest.decorators import require_content_types
 from invenio_rest.errors import RESTException
-from invenio_search import current_search_client
+from invenio_search import RecordsSearch
 from invenio_workflows import WorkflowObject
 
 from ..api import WorkflowUIRecord
 
 from ..search import (
-    WorkflowUISearch,
-    default_query_factory,
-    default_sorter_factory,
+    default_query_factory
 )
 from ..tasks import resolve_actions
 from ..utils import obj_or_import_string
@@ -73,8 +70,9 @@ def create_blueprint(config, context_processors):
     search_index = config.get('search_index')
     max_result_window = config.get('max_result_window')
 
-    query_factory = config.get('query_factory', default_query_factory)
-    sorter_factory = config.get('sorter_factory', default_sorter_factory)
+    search_factory = config.get('search_factory', default_query_factory)
+
+    search_factory = obj_or_import_string(search_factory)
 
     workflow_object_serializers = {
         mime: obj_or_import_string(func)
@@ -99,8 +97,7 @@ def create_blueprint(config, context_processors):
         workflow_object_serializers=workflow_object_serializers,
         default_media_type=default_media_type,
         search_index=search_index,
-        query_factory=query_factory,
-        sorter_factory=sorter_factory,
+        search_factory=search_factory,
         max_result_window=max_result_window
     )
     list_route = config.get('list_route')
@@ -171,8 +168,7 @@ class WorkflowsListResource(ContentNegotiatedMethodView):
                  search_index=None, search_type=None,
                  record_loaders=None,
                  search_serializers=None, default_media_type=None,
-                 max_result_window=None, facets_factory=None,
-                 sorter_factory=None, query_factory=None,
+                 max_result_window=None, search_factory=None,
                  item_links_factory=None, record_class=None, **kwargs):
         """Constructor."""
         super(WorkflowsListResource, self).__init__(
@@ -186,13 +182,12 @@ class WorkflowsListResource(ContentNegotiatedMethodView):
             },
             default_media_type=default_media_type,
             **kwargs)
-        self.searcher = WorkflowUISearch(
-            sorter_factory=sorter_factory,
-            query_factory=query_factory,
-            search_index=search_index,
-            search_type=search_type
-        )
+        self.searcher = RecordsSearch(
+            index=search_index,
+            doc_type=search_type
+        ).params(version=True)
         self.max_result_window = max_result_window
+        self.search_factory = partial(search_factory, self)
 
     def get(self, **kwargs):
         """Search records.
@@ -205,13 +200,22 @@ class WorkflowsListResource(ContentNegotiatedMethodView):
         if page * size >= self.max_result_window:
             raise RESTException("Too many results to show!")
 
+        urlkwargs = dict()
+        search = self.searcher[(page-1)*size:page*size]
+
+        search, qs_kwargs = self.search_factory(search)
+
+        urlkwargs.update(qs_kwargs)
+
         # Execute search
-        urlkwargs, search_result = self.searcher.search(size=size, page=page)
+        search_result = search.execute()
+
+        # Execute search
+        # urlkwargs, search_result = self.searcher.search(size=size, page=page)
 
         # Generate links for prev/next
         urlkwargs.update(
             size=size,
-            q=request.values.get('q', ''),
             _external=True,
         )
         endpoint = '.{0}'.format(self.view_name)

@@ -30,7 +30,6 @@ import pkg_resources
 
 from . import config
 from .views import rest, ui
-from .search import WorkflowUISearch
 
 
 class _WorkflowsUIState(object):
@@ -42,7 +41,6 @@ class _WorkflowsUIState(object):
         self.app = app
         self.actions = {}
         self.cache = cache
-        self.searcher = WorkflowUISearch.create(app)
         if entry_point_group:
             self.load_entry_point_group(entry_point_group)
 
@@ -134,6 +132,7 @@ class InvenioWorkflowsUI(object):
         state = _WorkflowsUIState(app, entry_point_group=entry_point_group,
                                   cache=kwargs.get('cache'))
         app.register_blueprint(ui.create_blueprint(
+            app.config['WORKFLOWS_UI_REST_ENDPOINT'],
             app.config['WORKFLOWS_UI_URL'],
             app.config['WORKFLOWS_UI_TEMPLATE_CONTEXT_PROCESSORS']
         ))
