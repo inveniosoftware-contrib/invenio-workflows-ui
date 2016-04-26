@@ -51,13 +51,16 @@ from flask import (
 
 from flask_login import login_required
 
-
+from invenio_search import RecordsSearch
 from invenio_workflows import (
     WorkflowObject,
     ObjectStatus,
 )
 
-from ..proxies import actions, searcher
+from ..search import (
+    default_query_factory
+)
+from ..proxies import actions
 from ..utils import (
     get_rows,
     get_data_types,
@@ -68,16 +71,32 @@ from ..utils import (
 )
 
 
-def create_blueprint(endpoint, context_processors):
+def create_blueprint(config, url_endpoint, context_processors):
     """Create UI blueprint for invenio-workflows-ui."""
 
     blueprint = Blueprint(
         'invenio_workflows_ui',
         __name__,
-        url_prefix=endpoint,
+        url_prefix=url_endpoint,
         template_folder='../templates',
         static_folder='../static',
     )
+
+    index = config.get('search_index')
+    doc_type = config.get('search_type')
+    search_factory = config.get(
+        'search_factory', default_query_factory
+    )
+    search_factory = obj_or_import_string(search_factory)
+
+    searcher = RecordsSearch(
+        index=index,
+        doc_type=doc_type
+    ).params(version=True)
+
+    def _search(**kwargs):
+        search, dummy = search_factory(blueprint, searcher, **kwargs)
+        return search.execute()
 
     @blueprint.route('/', methods=['GET', 'POST'])
     @blueprint.route('/index', methods=['GET', 'POST'])
@@ -85,32 +104,36 @@ def create_blueprint(endpoint, context_processors):
     def index():
         """Display basic dashboard interface of Workflows UI."""
         q = '_workflow.status:"{0}"'
-        error_state_total = searcher.search(
-            query_string=q.format(ObjectStatus.labels[ObjectStatus.ERROR.value])
-        )[1]['hits']['total']
-        halted_state_total = searcher.search(
-            query_string=q.format(ObjectStatus.labels[ObjectStatus.HALTED.value])
-        )[1]['hits']['total']
+        error_state_total = _search(
+            q=q.format(ObjectStatus.labels[ObjectStatus.ERROR.value])
+        ).hits.total
+        halted_state_total = _search(
+            q=q.format(ObjectStatus.labels[ObjectStatus.HALTED.value])
+        ).hits.total
         return render_template(current_app.config['WORKFLOWS_UI_INDEX_TEMPLATE'],
                                error_state_total=error_state_total,
                                halted_state_total=halted_state_total)
-
 
     @blueprint.route('/load', methods=['GET', 'POST'])
     @login_required
     def load():
         """Load objects for the table."""
-        search = request.args.get("search") or ""  # empty to show all
+        query_string = request.args.get("search") or ""  # empty to show all
         sort_key = request.args.get('sort_key', "_workflow.modified")
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 25, type=int)
 
-        __, results = searcher.search(
-            query_string=search, size=per_page, page=page, sort_key=sort_key
-        )
-        total = int(results['hits']['total'])
-        current_app.logger.debug("Total hits: {0}".format(total))
-        pagination = Pagination(page, per_page, total)
+        # __, results = searcher.search(
+        #     query_string=search, size=per_page, page=page, sort_key=sort_key
+        # )
+        search = searcher[(page-1)*per_page:page*per_page]
+        search, dummy = search_factory(blueprint, search, sort=sort_key, q=query_string)
+        search_result = search.execute()
+
+        current_app.logger.debug("Total hits: {0}".format(
+            search_result.hits.total
+        ))
+        pagination = Pagination(page, per_page, search_result.hits.total)
 
         # Make sure requested page is within limits.
         if pagination.page > pagination.pages:
@@ -140,12 +163,11 @@ def create_blueprint(endpoint, context_processors):
         session['workflows_ui_sort_key'] = sort_key
         session['workflows_ui_per_page'] = per_page
         session['workflows_ui_page'] = page
-        session['workflows_ui_search'] = search
+        session['workflows_ui_search'] = query_string
 
-        table_data["rows"] = get_rows(results)
+        table_data["rows"] = get_rows(search_result)
         table_data["rendered_rows"] = "".join(table_data["rows"])
         return jsonify(table_data)
-
 
     @blueprint.route('/list', methods=['GET', ])
     @blueprint.route('/list/', methods=['GET', ])
@@ -171,14 +193,13 @@ def create_blueprint(endpoint, context_processors):
         return render_template(
             current_app.config['WORKFLOWS_UI_LIST_TEMPLATE'],
             search=search_value,
-            total=searcher.search(
-                query_string=search_value, size=per_page, page=page, sort_key=sort_key
-            )[1]['hits']['total'],
+            total=_search(
+                q=search_value, sort=sort_key
+            ).hits.total,
             type_list=get_data_types(),
             name_list=get_workflow_names(),
             per_page=per_page
         )
-
 
     @blueprint.route('/<int:objectid>', methods=['GET', 'POST'])
     @blueprint.route('/details/<int:objectid>', methods=['GET', 'POST'])

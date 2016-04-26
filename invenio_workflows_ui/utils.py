@@ -155,7 +155,7 @@ def get_rendered_row(obj_id):
 
 def get_rows(results):
     """Return all rows formatted."""
-    id_list = [hit["_id"] for hit in results['hits']['hits']]
+    id_list = [hit.id for hit in results.hits]
     session['workflows_ui_current_ids'] = id_list
     return [get_rendered_row(bid)
             for bid in id_list]
