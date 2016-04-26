@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of Invenio.
-# Copyright (C) 2014, 2015 CERN.
+# Copyright (C) 2014, 2015, 2016 CERN.
 #
 # Invenio is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License as
@@ -22,13 +22,6 @@
 from __future__ import absolute_import, print_function
 
 
-class WorkflowMissing(object):
-
-    """Placeholder workflow definition."""
-
-    workflow = [lambda obj, eng: None]
-
-
 class WorkflowBase(object):
 
     """Base class for workflow definition.
@@ -36,24 +29,25 @@ class WorkflowBase(object):
     Interface to define which functions should be imperatively implemented.
 
     All workflows intended to work well with workflows UI should inherit from
-    this class.
+    this class or satisfy its API.
     """
-
+    name = "Workflow"
+    data_type = "workflow"
     search_index = None
     search_type = None
 
     @staticmethod
-    def get_title(bwo, **kwargs):
+    def get_title(obj, **kwargs):
         """Return the value to put in the title column of workflow UI."""
         return "No title"
 
     @staticmethod
-    def get_description(bwo, **kwargs):
+    def get_description(obj, **kwargs):
         """Return the value to put in the title  column of workflow UI."""
         return "No description"
 
     @staticmethod
-    def get_additional(bwo, **kwargs):
+    def get_additional(obj, **kwargs):
         """Return the value to put in the additional column of workflow UI."""
         return ""
 

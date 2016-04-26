@@ -29,8 +29,9 @@ import six
 
 from flask import current_app
 
+from elasticsearch import TransportError
+
 from invenio_db import db
-from invenio_pidstore.models import PersistentIdentifier
 from invenio_records import Record
 from invenio_workflows import ObjectStatus, WorkflowObject, resume
 from invenio_workflows.proxies import workflows
@@ -38,8 +39,6 @@ from invenio_workflows.proxies import workflows
 from invenio_search import current_search_client
 
 from .proxies import actions
-from .errors import WorkflowUISkipIndexing
-from .minters import workflow_minter
 
 
 class WorkflowUIRecord(Record):
@@ -48,16 +47,6 @@ class WorkflowUIRecord(Record):
     @classmethod
     def create(cls, workflow_object, **kwargs):
         """Create a indexable workflow JSON."""
-        if not workflow_object.workflow:
-            # No workflow registered to object yet. Skip indexing
-            raise WorkflowUISkipIndexing("Workflow does not exist")
-
-        if workflow_object.workflow.name not in workflows:
-            raise WorkflowUISkipIndexing(
-                "No workflow {0} found for {1}".format(
-                    workflow_object.name, workflow_object.id
-                )
-            )
         record = cls.record_from_model(workflow_object)
         return cls(record, model=workflow_object, **kwargs)
 
@@ -73,36 +62,40 @@ class WorkflowUIRecord(Record):
 
     @staticmethod
     def record_from_model(workflow_object):
-        """Build data from workflow object."""
-        # NOTE: This entire function may in principle be in invenio_workflows
-        # WorkflowObject model as a to_dict() kind of function of the model.
-        workflow_definition = workflows.get(workflow_object.workflow.name)
+        """Build data from workflow object.
 
-        if not workflow_object.data_type:
-            if workflow_definition and hasattr(workflow_definition, 'data_type'):
-                data_type = workflow_definition.data_type
-            else:
-                data_type = "workflow"
-        else:
-            data_type = workflow_object.data_type
-
-        if workflow_definition and hasattr(workflow_definition, 'name'):
-            workflow_name = workflow_definition.name
-        else:
-            workflow_name = None
+        NOTE: This entire function may in principle be in invenio_workflows
+        WorkflowObject model as a to_dict() kind of function of the model.
+        """
         record = {}
         record["id"] = workflow_object.id
         record["_workflow"] = {}
-        record["_workflow"]["data_type"] = data_type
+        record["_workflow"]["data_type"] = workflow_object.data_type
         record["_workflow"]["status"] = ObjectStatus.labels[workflow_object.status.value]
         record["_workflow"]["created"] = workflow_object.created.isoformat()
         record["_workflow"]["modified"] = workflow_object.modified.isoformat()
-        record["_workflow"]["id_workflow"] = six.text_type(workflow_object.id_workflow)
         record["_workflow"]["id_user"] = workflow_object.id_user
         record["_workflow"]["id_parent"] = workflow_object.id_parent
-        record["_workflow"]["workflow_class"] = workflow_object.workflow.name
-        record["_workflow"]["workflow_position"] = str(workflow_object.callback_pos)
-        record["_workflow"]["workflow_name"] = workflow_name
+        record["_workflow"]["id_workflow"] = None
+        record["_workflow"]["workflow_class"] = None
+        record["_workflow"]["workflow_position"] = None
+        record["_workflow"]["workflow_name"] = None
+
+        if workflow_object.workflow and workflow_object.workflow.name in workflows:
+            workflow_definition = workflows.get(workflow_object.workflow.name)
+
+            if not record["_workflow"]["data_type"] and workflow_definition and hasattr(
+                    workflow_definition, 'data_type'):
+                record["_workflow"]["data_type"] = workflow_definition.data_type
+
+            if workflow_definition and hasattr(workflow_definition, 'name'):
+                record["_workflow"]["workflow_name"] = workflow_definition.name
+
+            if workflow_object.id_workflow:
+                record["_workflow"]["id_workflow"] = six.text_type(workflow_object.id_workflow)
+
+            record["_workflow"]["workflow_class"] = workflow_object.workflow.name
+            record["_workflow"]["workflow_position"] = six.text_type(workflow_object.callback_pos)
 
         if isinstance(workflow_object.data, dict):
             record.update(workflow_object.data)
@@ -135,12 +128,20 @@ class WorkflowUIRecord(Record):
             self["_workflow"]["data_type"]
         )
         if config or (index_name and doc_type):
-            current_search_client.index(
-                id=str(self['id']),
-                index=index_name or config.get('search_index'),
-                doc_type=doc_type or config.get('search_type'),
-                body=self.dumps(),
-            )
+            try:
+                current_search_client.index(
+                    id=str(self['id']),
+                    index=index_name or config.get('search_index'),
+                    doc_type=doc_type or config.get('search_type'),
+                    body=self.dumps(),
+                )
+            except TransportError:
+                current_app.logger.exception()
+                current_app.logger.error(
+                    "Problem while indexing workflow object {0}".format(
+                        self.model.id
+                    )
+                )
 
     def delete_from_index(self, index=None, doc_type=None):
         """Delete given record from index."""
@@ -148,9 +149,17 @@ class WorkflowUIRecord(Record):
             self["_workflow"]["data_type"]
         )
         if config or (index and doc_type):
-            current_search_client.delete(
-                index=index or config.get('search_index'),
-                doc_type=doc_type or config.get('search_type'),
-                id=str(self['id']),
-                ignore=404
-            )
+            try:
+                current_search_client.delete(
+                    index=index or config.get('search_index'),
+                    doc_type=doc_type or config.get('search_type'),
+                    id=str(self['id']),
+                    ignore=404
+                )
+            except TransportError:
+                current_app.logger.exception()
+                current_app.logger.error(
+                    "Problem while indexing workflow object {0}".format(
+                        self.model.id
+                    )
+                )

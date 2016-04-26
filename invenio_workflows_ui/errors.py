@@ -24,7 +24,3 @@ from __future__ import absolute_import, print_function
 
 class WorkflowUIError(Exception):
     """Base exception for WorkflowUI."""
-
-
-class WorkflowUISkipIndexing(WorkflowUIError):
-    """When workflow object is not eligible to be indexed."""

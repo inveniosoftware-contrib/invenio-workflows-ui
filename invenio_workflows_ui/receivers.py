@@ -24,10 +24,9 @@ from __future__ import absolute_import, print_function
 from sqlalchemy.event import listen
 
 from invenio_workflows import WorkflowObject
-from invenio_workflows.signals import workflow_object_saved
+from invenio_workflows.signals import workflow_object_after_save
 
 from .api import WorkflowUIRecord
-from .errors import WorkflowUISkipIndexing
 
 
 def delete_from_index(mapper, connection, target):
@@ -36,13 +35,10 @@ def delete_from_index(mapper, connection, target):
     obj.delete_from_index()
 
 
-@workflow_object_saved.connect
+@workflow_object_after_save.connect
 def index_workflow_object(sender, **kwargs):
     """Index a workflow object for workflows UI."""
-    try:
-        obj = WorkflowUIRecord.create(sender)
-    except WorkflowUISkipIndexing:
-        return
+    obj = WorkflowUIRecord.create(sender)
     obj.index()
 
 
