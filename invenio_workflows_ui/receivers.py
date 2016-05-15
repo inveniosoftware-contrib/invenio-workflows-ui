@@ -24,7 +24,7 @@ from __future__ import absolute_import, print_function
 from sqlalchemy.event import listen
 
 from invenio_workflows import WorkflowObject
-from invenio_workflows.signals import workflow_object_after_save
+from invenio_workflows.signals import workflow_object_saved
 
 from .api import WorkflowUIRecord
 
@@ -35,7 +35,7 @@ def delete_from_index(mapper, connection, target):
     obj.delete_from_index()
 
 
-@workflow_object_after_save.connect
+@workflow_object_saved.connect
 def index_workflow_object(sender, **kwargs):
     """Index a workflow object for workflows UI."""
     obj = WorkflowUIRecord.create(sender)
