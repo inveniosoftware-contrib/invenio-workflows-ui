@@ -109,9 +109,6 @@ setup(
         'invenio_celery.tasks': [
             'invenio_workflows_ui = invenio_workflows_ui.tasks',
         ],
-        # TODO: Edit these entry points to fit your needs.
-        # 'invenio_access.actions': [],
-        # 'invenio_admin.actions': [],
         'invenio_assets.bundles': [
             'invenio_workflows_ui_css = invenio_workflows_ui.bundles:css',
             'invenio_workflows_ui_js_list = invenio_workflows_ui.bundles:js_list',
