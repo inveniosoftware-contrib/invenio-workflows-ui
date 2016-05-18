@@ -135,8 +135,8 @@ class WorkflowUIRecord(Record):
                     doc_type=doc_type or config.get('search_type'),
                     body=self.dumps(),
                 )
-            except TransportError:
-                current_app.logger.exception()
+            except TransportError as err:
+                current_app.logger.exception(err)
                 current_app.logger.error(
                     "Problem while indexing workflow object {0}".format(
                         self.model.id
