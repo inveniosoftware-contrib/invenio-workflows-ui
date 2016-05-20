@@ -41,23 +41,18 @@
         :target: https://github.com/inspirehep/invenio-workflows-ui/blob/master/LICENSE
 
 
-Invenio module which acts as a UI layer for invenio-workflows.
+Invenio module which acts as a UI layer for `invenio-workflows`.
 
-*This is an experimental developer preview release.*
+*This is an experimental developer preview release. While this module has been primarily developed for the
+INSPIRE-HEP High-Energy Physics use case, it is customizable enough to be used for any use case.*
 
 * Free software: GPLv2 license
 * Documentation: https://pythonhosted.org/invenio-workflows-ui/
 
 
-Configuration
-=============
+How to use
+==========
 
-In order to build assets correctly, you need to modify your instance
-``settings.js`` and add the following to the list of ``paths``:
+See the `usage guide`_ here.
 
-.. code-block: javascript
-
-    hgn: "node_modules/requirejs-hogan-plugin/hgn",
-    hogan: "node_modules/hogan.js/web/builds/3.0.2/hogan-3.0.2.amd",
-    text: "node_modules/requirejs-hogan-plugin/text",
-    flight: "node_modules/flightjs/build/flight"
+.. _usage guide: ./docs/usage.rst

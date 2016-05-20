@@ -25,6 +25,4 @@
 API Docs
 ========
 
-invenio_workflows_ui
---------------------
-
+.. automodule:: invenio_workflows_ui

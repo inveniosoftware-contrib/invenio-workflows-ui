@@ -22,13 +22,24 @@
     as an Intergovernmental Organization or submit itself to any jurisdiction.
 
 
-.. include:: ../README.rst
+======================
+ invenio-workflows-ui
+======================
+
+Invenio module which acts as a UI layer for `invenio-workflows`.
+
+*This is an experimental developer preview release. While this module has been primarily developed for the
+INSPIRE-HEP High-Energy Physics use case, it is customizable enough to be used for any use case.*
+
+* Free software: GPLv2 license
+* Documentation: https://pythonhosted.org/invenio-workflows-ui/
+
 
 User's Guide
 ------------
 
 This part of the documentation will show you how to get started in using
-Invenio-Base.
+Invenio-Workflows-UI.
 
 .. toctree::
    :maxdepth: 2
