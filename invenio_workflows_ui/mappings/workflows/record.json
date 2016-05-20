@@ -2,7 +2,7 @@
   "mappings": {
     "record": {
       "_all": {
-        "enable": true
+        "enabled": true
       },
       "properties": {
         "_workflow": {
