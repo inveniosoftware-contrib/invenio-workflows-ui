@@ -309,6 +309,7 @@ class WorkflowActionResource(ContentNegotiatedMethodView):
         return self.make_response(dict(
             acknowledged=True,
             result=response,
+            action=action,
         ), 200)
 
 

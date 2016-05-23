@@ -79,7 +79,14 @@ define(
             data: payload,
           }).done(function(data) {
               var message;
-              if (data !== undefined && data.hasOwnProperty('result')) {
+              if (data !== undefined && data.hasOwnProperty('action')) {
+                 if (data.action == "restart" && data.hasOwnProperty('result')) {
+                    message = "Successfully restarted task.";
+                    console.log("Successfully restarted task (task ID: " + data.result + ").");
+                 } else {
+                    message = "Operation completed."
+                 }
+              } else if (data !== undefined && data.hasOwnProperty('result')) {
                  message = data.result;
               } else if (type === "DELETE") {
                  message = "Successfully deleted object with identifier " + $this.attr.objectid;
