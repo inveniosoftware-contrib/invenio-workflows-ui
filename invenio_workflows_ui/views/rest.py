@@ -210,9 +210,6 @@ class WorkflowsListResource(ContentNegotiatedMethodView):
         # Execute search
         search_result = search.execute()
 
-        # Execute search
-        # urlkwargs, search_result = self.searcher.search(size=size, page=page)
-
         # Generate links for prev/next
         urlkwargs.update(
             size=size,
@@ -222,12 +219,12 @@ class WorkflowsListResource(ContentNegotiatedMethodView):
         links = dict(self=url_for(endpoint, page=page, **urlkwargs))
         if page > 1:
             links['prev'] = url_for(endpoint, page=page-1, **urlkwargs)
-        if size * page < int(search_result['hits']['total']) and \
+        if size * page < int(search_result.hits.total) and \
                 size * page < self.max_result_window:
             links['next'] = url_for(endpoint, page=page+1, **urlkwargs)
 
         return self.make_response(
-            search_result=search_result,
+            search_result=search_result.to_dict(),
             links=links,
         )
 
