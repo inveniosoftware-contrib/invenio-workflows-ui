@@ -32,10 +32,14 @@ def default_query_factory(self, search, **kwargs):
         query_string = kwargs['q']
     else:
         query_string = request.values.get('q', '')
-#    import ipdb; ipdb.set_trace()
-    search = search.query(Q('query_string',
-                            query=query_string,
-                            allow_leading_wildcard=False))
+
+    if not query_string:
+        # Assume empty query == match all
+        search = search.query(Q('match_all'))
+    else:
+        search = search.query(Q('query_string',
+                                query=query_string,
+                                allow_leading_wildcard=False))
 
     search_index = search._index[0]
     search, sortkwargs = default_sorter_factory(search, search_index, **kwargs)
