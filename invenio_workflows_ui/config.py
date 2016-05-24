@@ -21,6 +21,9 @@
 
 from __future__ import absolute_import, print_function
 
+from invenio_workflows_ui.search import terms_filter
+
+
 WORKFLOWS_UI_URL = "/workflows"
 WORKFLOWS_UI_API_URL = "/api/workflows/"
 
@@ -55,6 +58,61 @@ WORKFLOWS_UI_DATA_TYPES = dict(
         search_type='record',
     ),
 )
+
+WORKFLOWS_UI_REST_FACETS = {
+    "workflows": {
+        "filters": {
+            "status": terms_filter('_workflow.status'),
+            "data_type": terms_filter('_workflow.data_type'),
+            "workflow_name": terms_filter('_workflow.workflow_name'),
+        },
+        "aggs": {
+            "status": {
+                "terms": {
+                    "field": "_workflow.status",
+                    "size": 20
+                }
+            },
+            "data_type": {
+                "terms": {
+                    "field": "_workflow.data_type",
+                    "size": 20
+                }
+            },
+            "workflow_name": {
+                "terms": {
+                    "field": "_workflow.workflow_name",
+                    "size": 20
+                }
+            },
+        }
+    }
+}
+
+WORKFLOWS_UI_REST_SORT_OPTIONS = {
+    "workflows": {
+        "bestmatch": {
+            "title": 'Best match',
+            "fields": ['_score'],
+            "default_order": 'desc',
+            "order": 1,
+        },
+        "mostrecent": {
+            "title": 'Most recent',
+            "fields": ['_workflow.modified'],
+            "default_order": 'desc',
+            "order": 2,
+        },
+    },
+}
+
+WORKFLOWS_UI_REST_DEFAULT_SORT = {
+    "workflows": {
+        "query": "-bestmatch",
+        "noquery": "-mostrecent"
+    }
+}
+
 
 WORKFLOWS_UI_CACHE_PREFIX = "WorkflowsUI::"
 WORKFLOWS_UI_LIST_TEMPLATE = "invenio_workflows_ui/list.html"

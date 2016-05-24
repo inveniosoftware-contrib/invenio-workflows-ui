@@ -27,6 +27,7 @@
 from __future__ import absolute_import, print_function
 
 import os
+import json
 
 from functools import partial, wraps
 
@@ -34,9 +35,9 @@ from flask import (
     abort,
     Blueprint,
     current_app,
+    make_response,
     request,
     url_for,
-    make_response,
 )
 
 from invenio_db import db
@@ -71,7 +72,6 @@ def create_blueprint(config, context_processors):
     max_result_window = config.get('max_result_window')
 
     search_factory = config.get('search_factory', default_query_factory)
-
     search_factory = obj_or_import_string(search_factory)
 
     workflow_object_serializers = {
@@ -206,7 +206,7 @@ class WorkflowsListResource(ContentNegotiatedMethodView):
         search, qs_kwargs = self.search_factory(search)
 
         urlkwargs.update(qs_kwargs)
-
+        current_app.logger.debug(json.dumps(search.to_dict(), indent=4))
         # Execute search
         search_result = search.execute()
 
@@ -253,7 +253,6 @@ class WorkflowObjectResource(ContentNegotiatedMethodView):
             },
             default_media_type=default_media_type,
             **kwargs)
-
 
     @pass_workflow_object
     # @need_record_permission('read_permission_factory')
