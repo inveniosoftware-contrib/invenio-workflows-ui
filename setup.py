@@ -114,12 +114,6 @@ setup(
             'invenio_workflows_ui_js_list = invenio_workflows_ui.bundles:js_list',
             'invenio_workflows_ui_js_details = invenio_workflows_ui.bundles:js_details',
         ],
-        'invenio_pidstore.fetchers': [
-            'workflow = invenio_workflows_ui.fetchers:workflow_fetcher',
-        ],
-        'invenio_pidstore.minters': [
-            'workflow = invenio_workflows_ui.minters:workflow_minter',
-        ],
     },
     extras_require=extras_require,
     install_requires=install_requires,
