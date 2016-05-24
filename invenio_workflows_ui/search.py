@@ -164,8 +164,8 @@ def default_query_factory(self, search, **kwargs):
 
     search_index = search._index[0]
 
-    search, urlkwargs = default_facets_factory(search, search_index, **kwargs)
-    search, sortkwargs = default_sorter_factory(search, search_index, **kwargs)
+    search, urlkwargs = default_facets_factory(search, search_index)
+    search, sortkwargs = default_sorter_factory(search, search_index)
     for key, value in sortkwargs.items():
         urlkwargs.add(key, value)
 
