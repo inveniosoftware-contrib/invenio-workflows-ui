@@ -99,6 +99,8 @@ class WorkflowUIRecord(Record):
 
         if isinstance(workflow_object.data, dict):
             record.update(workflow_object.data)
+        if isinstance(workflow_object.extra_data, dict):
+            record.update({"_extra_data": workflow_object.extra_data})
         return record
 
     def resolve(self, *args, **kwargs):
