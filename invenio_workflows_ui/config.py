@@ -26,6 +26,7 @@ from invenio_workflows_ui.search import terms_filter
 
 WORKFLOWS_UI_URL = "/workflows"
 WORKFLOWS_UI_API_URL = "/api/workflows/"
+WORKFLOWS_UI_API_CLASS = "invenio_workflows_ui.api:WorkflowUIRecord"
 
 WORKFLOWS_UI_TEMPLATE_CONTEXT_PROCESSORS = []
 WORKFLOWS_UI_REST_ENDPOINT = dict(

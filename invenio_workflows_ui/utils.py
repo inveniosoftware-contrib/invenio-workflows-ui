@@ -33,8 +33,6 @@ from werkzeug import import_string
 
 from invenio_workflows import WorkflowObject, workflows
 
-from .proxies import current_workflows_ui
-
 
 
 class Pagination(object):
@@ -76,6 +74,8 @@ class Pagination(object):
 
 def get_formatted_workflow_object(bwo, date_format='%Y-%m-%d %H:%M:%S.%f'):
     """Return the formatted output, from cache if available."""
+    from .proxies import current_workflows_ui
+
     results = current_workflows_ui.get("row::{0}".format(bwo.id))
     if results:
         results = msgpack.loads(results)
@@ -96,6 +96,7 @@ def generate_formatted_workflow_object(
     from invenio_workflows import workflows
 
     from .definitions import WorkflowBase
+    from .proxies import current_workflows_ui
 
     workflows_name = bwo.get_workflow_name()
 

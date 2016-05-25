@@ -26,19 +26,19 @@ from sqlalchemy.event import listen
 from invenio_workflows import WorkflowObject
 from invenio_workflows.signals import workflow_object_after_save
 
-from .api import WorkflowUIRecord
+from .proxies import workflow_api_class
 
 
 def delete_from_index(mapper, connection, target):
     """Delete workflow object from index."""
-    obj = WorkflowUIRecord.create(target)
+    obj = workflow_api_class.create(target)
     obj.delete_from_index()
 
 
 @workflow_object_after_save.connect
 def index_workflow_object(sender, **kwargs):
     """Index a workflow object for workflows UI."""
-    obj = WorkflowUIRecord.create(sender)
+    obj = workflow_api_class.create(sender)
     obj.index()
 
 

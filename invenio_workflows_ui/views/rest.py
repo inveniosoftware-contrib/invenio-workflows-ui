@@ -46,13 +46,12 @@ from invenio_rest.errors import RESTException
 from invenio_search import RecordsSearch
 from invenio_workflows import WorkflowObject
 
-from ..api import WorkflowUIRecord
-
 from ..search import (
     default_query_factory
 )
 from ..tasks import resolve_actions
 from ..utils import obj_or_import_string
+from ..proxies import workflow_api_class
 
 
 def create_blueprint(config, context_processors):
@@ -152,7 +151,7 @@ def pass_workflow_object(f):
     @wraps(f)
     def inner(self, object_id, *args, **kwargs):
         workflow_object = WorkflowObject.query.get_or_404(object_id)
-        workflow_ui_object = WorkflowUIRecord.create(workflow_object)
+        workflow_ui_object = workflow_api_class.create(workflow_object)
         return f(self, workflow_ui_object=workflow_ui_object, *args, **kwargs)
     return inner
 
@@ -169,7 +168,7 @@ class WorkflowsListResource(ContentNegotiatedMethodView):
                  record_loaders=None,
                  search_serializers=None, default_media_type=None,
                  max_result_window=None, search_factory=None,
-                 item_links_factory=None, record_class=None, **kwargs):
+                 item_links_factory=None, workflow_api_class=None, **kwargs):
         """Constructor."""
         super(WorkflowsListResource, self).__init__(
             method_serializers={
@@ -259,7 +258,7 @@ class WorkflowObjectResource(ContentNegotiatedMethodView):
     def get(self, workflow_ui_object, **kwargs):
         """Get a record.
 
-        :param workflow_ui_object: WorkflowUIRecord object.
+        :param workflow_ui_object: workflow_api_class object.
         :returns: The requested record.
         """
         return self.make_response(workflow_ui_object)

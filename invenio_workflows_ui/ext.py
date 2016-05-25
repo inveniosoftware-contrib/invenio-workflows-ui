@@ -30,16 +30,21 @@ import pkg_resources
 
 from . import config
 from .views import rest, ui
+from .utils import obj_or_import_string
 
 
 class _WorkflowsUIState(object):
     """WorkflowsUI state storing registered actions."""
 
-    def __init__(self, app, entry_point_group=None, cache=None):
+    def __init__(self, app, entry_point_group=None,
+                 cache=None):
         """Initialize state."""
         self.init_config(app)
         self.app = app
         self.actions = {}
+        self.workflow_api_class = obj_or_import_string(
+            app.config.get('WORKFLOWS_UI_API_CLASS')
+        )
         self.cache = cache
         if entry_point_group:
             self.load_entry_point_group(entry_point_group)

@@ -54,14 +54,14 @@ class JSONSerializer(object):
     def serialize(self, workflow_ui_object):
         """Serialize a single workflow object.
 
-        :param workflow_ui_object: WorkflowUIRecord instance.
+        :param workflow_ui_object: workflow record instance.
         """
         return json.dumps(workflow_ui_object.dumps(), **self._format_args())
 
     def serialize_action(self, data):
         """Serialize an action response.
 
-        :param workflow_ui_object: WorkflowUIRecord instance.
+        :param workflow_ui_object: workflow record instance.
         """
         return json.dumps(dict(data), **self._format_args())
 

@@ -28,10 +28,10 @@ from celery import shared_task
 def resolve_actions(object_ids, action, *args, **kwargs):
     """Resolve a set of actions."""
     from invenio_workflows import WorkflowObject
-    from invenio_workflows_ui import WorkflowUIRecord, actions
+    from invenio_workflows_ui import workflow_api_class, actions
 
     for id_object in object_ids:
         workflow_object = WorkflowObject.query.get(id_object)
         if workflow_object:
-            workflow_ui_object = WorkflowUIRecord.create(workflow_object)
+            workflow_ui_object = workflow_api_class.create(workflow_object)
             getattr(workflow_ui_object, action)(*args, **kwargs)
