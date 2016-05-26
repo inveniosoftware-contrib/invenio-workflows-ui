@@ -45,7 +45,7 @@ def test_init():
     assert 'invenio-workflows-ui' in app.extensions
     ext.register_action('test_action', "test")
     assert 'test_action' in app.extensions['invenio-workflows-ui'].actions
-    assert app.extensions['invenio-workflows-ui'].searcher
+    assert app.extensions['invenio-workflows-ui'].workflow_api_class
 
     app = Flask('testapp')
     ext = InvenioWorkflowsUI()
@@ -57,5 +57,5 @@ def test_init():
 def test_view(app):
     """Test view."""
     with app.test_client() as client:
-        res = client.get("/workflows")
-        assert res.status_code == 200
+        res = client.get("/workflows/index", follow_redirects=True)
+        assert res.status_code == 401

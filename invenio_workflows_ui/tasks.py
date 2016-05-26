@@ -17,7 +17,7 @@
 # along with Invenio; if not, write to the Free Software Foundation, Inc.,
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 
-"""Celery Tasks proxy to the state object."""
+"""Celery Tasks."""
 
 from __future__ import absolute_import, print_function
 
@@ -27,11 +27,9 @@ from celery import shared_task
 @shared_task(ignore_result=True)
 def resolve_actions(object_ids, action, *args, **kwargs):
     """Resolve a set of actions."""
-    from invenio_workflows import WorkflowObject
-    from invenio_workflows_ui import workflow_api_class, actions
+    from invenio_workflows_ui import workflow_api_class
 
     for id_object in object_ids:
-        workflow_object = WorkflowObject.query.get(id_object)
-        if workflow_object:
-            workflow_ui_object = workflow_api_class.create(workflow_object)
+        workflow_ui_object = workflow_api_class.get_record(id_object)
+        if workflow_ui_object:
             getattr(workflow_ui_object, action)(*args, **kwargs)

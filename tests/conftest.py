@@ -34,6 +34,7 @@ import os
 from flask import Flask
 from flask_cli import FlaskCLI
 from flask_babelex import Babel
+from flask_login import LoginManager
 
 from invenio_db import InvenioDB
 from invenio_workflows import InvenioWorkflows
@@ -51,6 +52,7 @@ def app():
     )
     Babel(app)
     FlaskCLI(app)
+    LoginManager(app)
     InvenioDB(app)
     InvenioWorkflows(app)
     InvenioWorkflowsUI(app)

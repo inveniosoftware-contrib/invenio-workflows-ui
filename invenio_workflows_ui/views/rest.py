@@ -45,6 +45,8 @@ from invenio_rest import ContentNegotiatedMethodView
 from invenio_rest.errors import RESTException
 from invenio_search import RecordsSearch
 
+from sqlalchemy.orm.exc import NoResultFound
+
 from ..search import default_search_factory
 from ..tasks import resolve_actions
 from ..utils import obj_or_import_string
@@ -105,7 +107,7 @@ def create_blueprint(config, context_processors):
     )
     item_route = config.get('item_route')
 
-    actions_segment = "action/<any(resolve,restart,continue):action>"
+    actions_segment = "action/<any(resolve,restart,resume,edit):action>"
 
     action_route = os.path.join(
         item_route,
@@ -147,9 +149,13 @@ def pass_workflow_object(f):
     """Decorator to retrieve workflow object for use in views."""
     @wraps(f)
     def inner(self, object_id, *args, **kwargs):
+        try:
+            workflow_ui_object = workflow_api_class.get_record(object_id)
+        except NoResultFound:
+            return abort(404)
         return f(
             self,
-            workflow_ui_object=workflow_api_class.get_record(object_id),
+            workflow_ui_object=workflow_ui_object,
             *args,
             **kwargs
         )
@@ -295,12 +301,6 @@ class WorkflowActionResource(ContentNegotiatedMethodView):
 
     @pass_workflow_object
     def post(self, workflow_ui_object, action, *args, **kwargs):
-        from flask_login import current_user
-
-        # Add data to kwargs (needed for potential async tasks)
-        kwargs.update(request.form or {})
-        kwargs['id_user'] = current_user.get_id()
-
         response = getattr(workflow_ui_object, action)(*args, **kwargs)
         db.session.commit()
 
@@ -329,7 +329,7 @@ class WorkflowBulkActionResource(ContentNegotiatedMethodView):
         from flask_login import current_user
 
         # Add data to kwargs (needed for potential async tasks)
-        kwargs.update(request.form or {})
+        kwargs['request_data'] = request.json
         kwargs['id_user'] = current_user.get_id()
 
         async_task = resolve_actions.delay(object_ids, action, *args, **kwargs)

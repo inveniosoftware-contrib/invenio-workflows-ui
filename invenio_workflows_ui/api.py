@@ -29,7 +29,7 @@ import six
 
 from functools import partial, wraps
 
-from flask import current_app
+from flask import current_app, request
 
 from elasticsearch import TransportError
 
@@ -81,8 +81,12 @@ class WorkflowUIRecord(Record):
 
     indexer = WorkflowIndexer(
         record_to_index=record_to_index,
-        version_type=None
     )
+
+    @property
+    def revision_id(self):
+        """Special override as workflow object does not have revision."""
+        return None
 
     @classmethod
     @index
@@ -101,14 +105,17 @@ class WorkflowUIRecord(Record):
             obj = query.one()
             return cls(cls.record_from_model(obj), model=obj)
 
-    @property
-    def revision_id(self):
-        """Special override as workflow object does not have revision."""
-        return None
+    def commit(self):
+        """Commit a change to the record state."""
+        with db.session.begin_nested():
+            self.update_model()
 
     @index(delete=True)
-    def delete(self):
-        db.session.delete(self.model)
+    def delete(self, force=False):
+        """Delete model from DB and search index."""
+        with db.session.begin_nested():
+            db.session.delete(self.model)
+        return self
 
     @staticmethod
     def record_from_model(workflow_object):
@@ -121,12 +128,12 @@ class WorkflowUIRecord(Record):
         record["id"] = workflow_object.id
         record["_workflow"] = {}
         record["_workflow"]["data_type"] = workflow_object.data_type
-        record["_workflow"]["status"] = ObjectStatus.labels[workflow_object.status.value]
+        record["_workflow"]["status"] = workflow_object.status.name
         record["_workflow"]["id_user"] = workflow_object.id_user
         record["_workflow"]["id_parent"] = workflow_object.id_parent
         record["_workflow"]["id_workflow"] = None
         record["_workflow"]["workflow_class"] = None
-        record["_workflow"]["workflow_position"] = None
+        record["_workflow"]["workflow_position"] = workflow_object.callback_pos
         record["_workflow"]["workflow_name"] = None
 
         if workflow_object.workflow and workflow_object.workflow.name in workflows:
@@ -143,23 +150,40 @@ class WorkflowUIRecord(Record):
                 record["_workflow"]["id_workflow"] = six.text_type(workflow_object.id_workflow)
 
             record["_workflow"]["workflow_class"] = workflow_object.workflow.name
-            record["_workflow"]["workflow_position"] = six.text_type(workflow_object.callback_pos)
 
         if isinstance(workflow_object.data, dict):
-            record.update(workflow_object.data)
+            record.update({"metadata": workflow_object.data})
         if isinstance(workflow_object.extra_data, dict):
             record.update({"_extra_data": workflow_object.extra_data})
         return record
 
-    def resolve(self, *args, **kwargs):
-        """Resolve an action if applicable."""
-        action_name = self.model.get_action()
-        if action_name:
-            action_form = actions[action_name]
-            return action_form.resolve(self.model, *args, **kwargs)
+    def update_model(self):
+        """Update model from current record."""
+        self.model.data_type = self["_workflow"]["data_type"]
+        self.model.status = ObjectStatus[self["_workflow"]["status"]]
+        self.model.id_user = self["_workflow"]["id_user"]
+        self.model.id_parent = self["_workflow"]["id_parent"]
+        self.model.id_workflow = self["_workflow"]["id_workflow"]
+        self.model.callback_pos = self["_workflow"]["workflow_position"]
+        self.model.data = self['metadata']
+        self.model.extra_data = self['_extra_data']
+        self.model.save()
+
+    @index
+    def edit(self, *args, **kwargs):
+        """Edit record."""
+        record = request.json
+        if record:
+            self.update(record)
+            self.commit()
+        return self
 
     def restart(self, *args, **kwargs):
         """Resume execution from current task/callback in workflow."""
+        if 'callback_pos' in kwargs:
+            self.model.callback_pos = kwargs['callback_pos']
+            self.model.save()
+            db.session.commit()
         return resume.delay(
             oid=self.model.id,
             restart_point="restart_task"
@@ -167,7 +191,18 @@ class WorkflowUIRecord(Record):
 
     def resume(self, *args, **kwargs):
         """Resume execution from next task/callback in workflow."""
+        if 'callback_pos' in kwargs:
+            self.model.callback_pos = kwargs['callback_pos']
+            self.model.save()
+            db.session.commit()
         return resume.delay(
             oid=self.model.id,
             restart_point="continue_task"
         ).id
+
+    def resolve(self, *args, **kwargs):
+        """Resolve an action if applicable."""
+        action_name = self.model.get_action()
+        if action_name:
+            action_form = actions[action_name]
+            return action_form.resolve(self.model, *args, **kwargs)

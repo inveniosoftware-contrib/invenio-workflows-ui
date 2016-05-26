@@ -33,10 +33,6 @@ actions = LocalProxy(
     lambda: current_app.extensions['invenio-workflows-ui'].actions
 )
 
-searcher = LocalProxy(
-    lambda: current_app.extensions['invenio-workflows-ui'].searcher
-)
-
 workflow_api_class = LocalProxy(
     lambda: current_app.extensions['invenio-workflows-ui'].workflow_api_class
 )
