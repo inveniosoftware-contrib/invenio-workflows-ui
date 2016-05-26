@@ -147,7 +147,7 @@ def default_facets_factory(search, index):
     return (search, urlkwargs)
 
 
-def default_query_factory(self, search, **kwargs):
+def default_search_factory(self, search, **kwargs):
     """Create default ES query based on query-string pattern."""
     if 'q' in kwargs:
         query_string = kwargs['q']

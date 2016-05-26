@@ -21,6 +21,7 @@
 
 from __future__ import absolute_import, print_function
 
+from elasticsearch.exceptions import NotFoundError
 from sqlalchemy.event import listen
 
 from invenio_workflows import WorkflowObject
@@ -31,15 +32,16 @@ from .proxies import workflow_api_class
 
 def delete_from_index(mapper, connection, target):
     """Delete workflow object from index."""
-    obj = workflow_api_class.create(target)
-    obj.delete_from_index()
+    obj = workflow_api_class.get_record(target.id)
+    try:
+        workflow_api_class.indexer.delete(obj)
+    except NotFoundError:
+        return
 
 
 @workflow_object_after_save.connect
 def index_workflow_object(sender, **kwargs):
     """Index a workflow object for workflows UI."""
-    obj = workflow_api_class.create(sender)
-    obj.index()
-
+    workflow_api_class.create(sender)
 
 listen(WorkflowObject, "before_delete", delete_from_index)

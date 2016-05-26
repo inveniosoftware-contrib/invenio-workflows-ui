@@ -58,7 +58,7 @@ from invenio_workflows import (
 )
 
 from ..search import (
-    default_query_factory
+    default_search_factory
 )
 from ..proxies import actions
 from ..utils import (
@@ -85,7 +85,7 @@ def create_blueprint(config, url_endpoint, context_processors):
     index = config.get('search_index')
     doc_type = config.get('search_type')
     search_factory = config.get(
-        'search_factory', default_query_factory
+        'search_factory_imp', default_search_factory
     )
     search_factory = obj_or_import_string(search_factory)
 

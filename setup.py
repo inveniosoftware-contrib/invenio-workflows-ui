@@ -72,6 +72,7 @@ setup_requires = [
 install_requires = [
     'Flask-BabelEx>=0.9.2',
     'invenio-search>=1.0.0a5',
+    'invenio-indexer>=1.0.0a5',
     #'invenio-workflows>=1.0.0a1',
 ]
 

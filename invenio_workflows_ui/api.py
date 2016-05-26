@@ -27,6 +27,8 @@ from __future__ import absolute_import, print_function
 
 import six
 
+from functools import partial, wraps
+
 from flask import current_app
 
 from elasticsearch import TransportError
@@ -36,15 +38,54 @@ from invenio_records import Record
 from invenio_workflows import ObjectStatus, WorkflowObject, resume
 from invenio_workflows.proxies import workflows
 
-from invenio_search import current_search_client
-
 from .proxies import actions
+from .indexer import WorkflowIndexer
+
+
+def record_to_index(record):
+    """Index the workflow record into desired index/doc_type."""
+    config = current_app.config['WORKFLOWS_UI_DATA_TYPES'].get(
+        record["_workflow"]["data_type"]
+    )
+    return config.get('search_index'), config.get('search_type')
+
+
+def index(method=None, delete=False):
+    """Apply to API methods that need to change the index for the object."""
+    # Check if we shall save arguments and recreate decorator
+    if method is None:
+        return partial(index, delete=delete)
+
+    @wraps(method)
+    def wrapper(self_or_cls, *args, **kwargs):
+        """Send record for indexing."""
+        result = method(self_or_cls, *args, **kwargs)
+        try:
+            if delete:
+                self_or_cls.indexer.delete(result)
+            else:
+                self_or_cls.indexer.index(result)
+        except TransportError as err:
+            current_app.logger.exception(err)
+            current_app.logger.error(
+                "Problem while indexing workflow object {0}".format(
+                    self_or_cls.id
+                )
+            )
+        return result
+    return wrapper
 
 
 class WorkflowUIRecord(Record):
     """Represents a workflow object record for indexing."""
 
+    indexer = WorkflowIndexer(
+        record_to_index=record_to_index,
+        version_type=None
+    )
+
     @classmethod
+    @index
     def create(cls, workflow_object, **kwargs):
         """Create a indexable workflow JSON."""
         record = cls.record_from_model(workflow_object)
@@ -60,6 +101,15 @@ class WorkflowUIRecord(Record):
             obj = query.one()
             return cls(cls.record_from_model(obj), model=obj)
 
+    @property
+    def revision_id(self):
+        """Special override as workflow object does not have revision."""
+        return None
+
+    @index(delete=True)
+    def delete(self):
+        db.session.delete(self.model)
+
     @staticmethod
     def record_from_model(workflow_object):
         """Build data from workflow object.
@@ -72,8 +122,6 @@ class WorkflowUIRecord(Record):
         record["_workflow"] = {}
         record["_workflow"]["data_type"] = workflow_object.data_type
         record["_workflow"]["status"] = ObjectStatus.labels[workflow_object.status.value]
-        record["_workflow"]["created"] = workflow_object.created.isoformat()
-        record["_workflow"]["modified"] = workflow_object.modified.isoformat()
         record["_workflow"]["id_user"] = workflow_object.id_user
         record["_workflow"]["id_parent"] = workflow_object.id_parent
         record["_workflow"]["id_workflow"] = None
@@ -123,45 +171,3 @@ class WorkflowUIRecord(Record):
             oid=self.model.id,
             restart_point="continue_task"
         ).id
-
-    def index(self, index_name=None, doc_type=None):
-        """Index the workflow record into desired index/doc_type."""
-        config = current_app.config['WORKFLOWS_UI_DATA_TYPES'].get(
-            self["_workflow"]["data_type"]
-        )
-        if config or (index_name and doc_type):
-            try:
-                current_search_client.index(
-                    id=str(self['id']),
-                    index=index_name or config.get('search_index'),
-                    doc_type=doc_type or config.get('search_type'),
-                    body=self.dumps(),
-                )
-            except TransportError as err:
-                current_app.logger.exception(err)
-                current_app.logger.error(
-                    "Problem while indexing workflow object {0}".format(
-                        self.model.id
-                    )
-                )
-
-    def delete_from_index(self, index=None, doc_type=None):
-        """Delete given record from index."""
-        config = current_app.config['WORKFLOWS_UI_DATA_TYPES'].get(
-            self["_workflow"]["data_type"]
-        )
-        if config or (index and doc_type):
-            try:
-                current_search_client.delete(
-                    index=index or config.get('search_index'),
-                    doc_type=doc_type or config.get('search_type'),
-                    id=str(self['id']),
-                    ignore=404
-                )
-            except TransportError:
-                current_app.logger.exception()
-                current_app.logger.error(
-                    "Problem while indexing workflow object {0}".format(
-                        self.model.id
-                    )
-                )

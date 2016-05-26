@@ -44,11 +44,8 @@ from invenio_db import db
 from invenio_rest import ContentNegotiatedMethodView
 from invenio_rest.errors import RESTException
 from invenio_search import RecordsSearch
-from invenio_workflows import WorkflowObject
 
-from ..search import (
-    default_query_factory
-)
+from ..search import default_search_factory
 from ..tasks import resolve_actions
 from ..utils import obj_or_import_string
 from ..proxies import workflow_api_class
@@ -70,7 +67,7 @@ def create_blueprint(config, context_processors):
     search_index = config.get('search_index')
     max_result_window = config.get('max_result_window')
 
-    search_factory = config.get('search_factory', default_query_factory)
+    search_factory = config.get('search_factory_imp', default_search_factory)
     search_factory = obj_or_import_string(search_factory)
 
     workflow_object_serializers = {
@@ -150,9 +147,12 @@ def pass_workflow_object(f):
     """Decorator to retrieve workflow object for use in views."""
     @wraps(f)
     def inner(self, object_id, *args, **kwargs):
-        workflow_object = WorkflowObject.query.get_or_404(object_id)
-        workflow_ui_object = workflow_api_class.create(workflow_object)
-        return f(self, workflow_ui_object=workflow_ui_object, *args, **kwargs)
+        return f(
+            self,
+            workflow_ui_object=workflow_api_class.get_record(object_id),
+            *args,
+            **kwargs
+        )
     return inner
 
 
@@ -271,7 +271,7 @@ class WorkflowObjectResource(ContentNegotiatedMethodView):
         :param workflow_ui_object: Workflow object.
         """
         try:
-            db.session.delete(workflow_ui_object.model)
+            workflow_ui_object.delete()
             db.session.commit()
         except Exception:
             db.session.rollback()
