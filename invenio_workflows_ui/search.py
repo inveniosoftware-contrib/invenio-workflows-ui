@@ -191,7 +191,6 @@ def default_sorter_factory(search, index):
 
     # Parse sort argument
     key, asc = parse_sort_field(urlfield)
-    current_app.logger.warning("Search index: {0}".format((key, asc)))
 
     # Get sort options
     sort_options = current_app.config['WORKFLOWS_UI_REST_SORT_OPTIONS'].get(

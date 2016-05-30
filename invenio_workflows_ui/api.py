@@ -169,9 +169,8 @@ class WorkflowUIRecord(Record):
         self.model.extra_data = self['_extra_data']
         self.model.save()
 
-    @index
     def edit(self, *args, **kwargs):
-        """Edit record."""
+        """Edit and save record (automatically indexed)."""
         record = request.json
         if record:
             self.update(record)
