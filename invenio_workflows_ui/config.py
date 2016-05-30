@@ -46,8 +46,14 @@ WORKFLOWS_UI_REST_ENDPOINT = dict(
         'application/json': ('invenio_workflows_ui.serializers'
                              ':json_action_serializer'),
     },
+    file_serializers={
+        'application/json': ('invenio_workflows_ui.serializers'
+                             ':json_file_serializer'),
+    },
     list_route='/workflows/',
     item_route='/workflows/<object_id>',
+    file_list_route='/workflows/<object_id>/files',
+    file_item_route='/workflows/<object_id>/files/<path:key>',
     search_index="workflows",
     default_media_type='application/json',
     max_result_window=10000,

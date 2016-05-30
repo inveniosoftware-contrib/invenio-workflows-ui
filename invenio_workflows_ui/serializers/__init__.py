@@ -28,10 +28,16 @@ from __future__ import absolute_import, print_function
 
 import json
 
-from .response import workflow_responsify, search_responsify, action_responsify
+from .response import (
+    workflow_responsify,
+    search_responsify,
+    action_responsify,
+    file_responsify
+)
 from .json import JSONSerializer
 
 json_v1 = JSONSerializer()
 json_serializer = workflow_responsify(json_v1, 'application/json')
 json_search_serializer = search_responsify(json_v1, 'application/json')
 json_action_serializer = action_responsify(json_v1, 'application/json')
+json_file_serializer = file_responsify(json_v1, 'application/json')

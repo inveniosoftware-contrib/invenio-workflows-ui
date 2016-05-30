@@ -68,6 +68,24 @@ def action_responsify(serializer, mimetype):
     return view
 
 
+def file_responsify(serializer, mimetype):
+    """Create a Workflows-REST file response serializer.
+
+    :param serializer: Serializer function.
+    :param mimetype: MIME type of response.
+    """
+    def view(data, code=200, headers=None):
+        response = current_app.response_class(
+            serializer.serialize_files(data),
+            mimetype=mimetype)
+        response.status_code = code
+
+        if headers is not None:
+            response.headers.extend(headers)
+        return response
+    return view
+
+
 def search_responsify(serializer, mimetype):
     """Create a Workflows-REST search result response serializer.
 

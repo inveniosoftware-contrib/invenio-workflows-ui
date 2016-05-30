@@ -34,7 +34,10 @@ from flask import current_app, request
 from elasticsearch import TransportError
 
 from invenio_db import db
+
 from invenio_records import Record
+from invenio_records.errors import MissingModelError
+
 from invenio_workflows import ObjectStatus, WorkflowObject, resume
 from invenio_workflows.proxies import workflows
 
@@ -83,11 +86,6 @@ class WorkflowUIRecord(Record):
         record_to_index=record_to_index,
     )
 
-    @property
-    def revision_id(self):
-        """Special override as workflow object does not have revision."""
-        return None
-
     @classmethod
     @index
     def create(cls, workflow_object, **kwargs):
@@ -113,6 +111,9 @@ class WorkflowUIRecord(Record):
     @index(delete=True)
     def delete(self, force=False):
         """Delete model from DB and search index."""
+        if self.model is None:
+            raise MissingModelError()
+
         with db.session.begin_nested():
             db.session.delete(self.model)
         return self
@@ -159,6 +160,9 @@ class WorkflowUIRecord(Record):
 
     def update_model(self):
         """Update model from current record."""
+        if self.model is None:
+            raise MissingModelError()
+
         self.model.data_type = self["_workflow"]["data_type"]
         self.model.status = ObjectStatus[self["_workflow"]["status"]]
         self.model.id_user = self["_workflow"]["id_user"]
@@ -179,6 +183,9 @@ class WorkflowUIRecord(Record):
 
     def restart(self, *args, **kwargs):
         """Resume execution from current task/callback in workflow."""
+        if self.model is None:
+            raise MissingModelError()
+
         if 'callback_pos' in kwargs:
             self.model.callback_pos = kwargs['callback_pos']
             self.model.save()
@@ -190,18 +197,34 @@ class WorkflowUIRecord(Record):
 
     def resume(self, *args, **kwargs):
         """Resume execution from next task/callback in workflow."""
+        if self.model is None:
+            raise MissingModelError()
+
         if 'callback_pos' in kwargs:
             self.model.callback_pos = kwargs['callback_pos']
             self.model.save()
             db.session.commit()
         return resume.delay(
             oid=self.model.id,
-            restart_point="continue_task"
+            restart_point="continue_next"
         ).id
 
     def resolve(self, *args, **kwargs):
         """Resolve an action if applicable."""
+        if self.model is None:
+            raise MissingModelError()
+
         action_name = self.model.get_action()
         if action_name:
             action_form = actions[action_name]
             return action_form.resolve(self.model, *args, **kwargs)
+
+    @property
+    def revision_id(self):
+        """Special override as workflow object does not have revision."""
+        return None
+
+    @property
+    def files(self):
+        """Adapter for self.model files object."""
+        return self.model.files

@@ -64,6 +64,7 @@ def create_blueprint(config, context_processors):
     workflow_object_serializers = config.get('workflow_object_serializers')
     search_serializers = config.get('search_serializers')
     action_serializers = config.get('action_serializers')
+    file_serializers = config.get('file_serializers')
     bulk_action_serializers = config.get('bulk_action_serializers')
     default_media_type = config.get('default_media_type')
     search_index = config.get('search_index')
@@ -87,6 +88,10 @@ def create_blueprint(config, context_processors):
     action_serializers = {
         mime: obj_or_import_string(func)
         for mime, func in action_serializers.items()
+    }
+    file_serializers = {
+        mime: obj_or_import_string(func)
+        for mime, func in file_serializers.items()
     }
 
     list_view = WorkflowsListResource.as_view(
@@ -129,11 +134,27 @@ def create_blueprint(config, context_processors):
         default_media_type=default_media_type,
     )
 
+    file_item_route = config.get('file_item_route')
+    file_item_view = WorkflowFileResource.as_view(
+        WorkflowFileResource.view_name,
+        serializers=file_serializers,
+        default_media_type=default_media_type,
+    )
+
+    file_list_route = config.get('file_list_route')
+    file_list_view = WorkflowFilesResource.as_view(
+        WorkflowFilesResource.view_name,
+        serializers=file_serializers,
+        default_media_type=default_media_type,
+    )
+
     views = [
         dict(rule=list_route, view_func=list_view),
         dict(rule=item_route, view_func=item_view),
         dict(rule=action_route, view_func=action_view),
         dict(rule=bulk_action_route, view_func=bulk_action_view),
+        dict(rule=file_list_route, view_func=file_list_view),
+        dict(rule=file_item_route, view_func=file_item_view),
     ]
 
     for rule in views:
@@ -309,6 +330,43 @@ class WorkflowActionResource(ContentNegotiatedMethodView):
             result=response,
             action=action,
         ), 200)
+
+
+class WorkflowFilesResource(ContentNegotiatedMethodView):
+    """"Workflow file item resource."""
+
+    view_name = 'workflows_file_list'
+
+    def __init__(self, serializers, *args, **kwargs):
+        """Constructor."""
+        super(WorkflowFilesResource, self).__init__(
+            serializers,
+            *args,
+            **kwargs
+        )
+
+    @pass_workflow_object
+    def get(self, workflow_ui_object, *args, **kwargs):
+        return self.make_response(workflow_ui_object.files)
+
+
+class WorkflowFileResource(ContentNegotiatedMethodView):
+    """"Workflow actions resource."""
+
+    view_name = 'workflows_file_item'
+
+    def __init__(self, serializers, *args, **kwargs):
+        """Constructor."""
+        super(WorkflowFileResource, self).__init__(
+            serializers,
+            *args,
+            **kwargs
+        )
+
+    @pass_workflow_object
+    def get(self, workflow_ui_object, key, *args, **kwargs):
+        file_obj = workflow_ui_object.files[key]
+        return self.make_response(file_obj)
 
 
 class WorkflowBulkActionResource(ContentNegotiatedMethodView):

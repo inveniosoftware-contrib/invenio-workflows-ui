@@ -65,6 +65,19 @@ class JSONSerializer(object):
         """
         return json.dumps(dict(data), **self._format_args())
 
+    def serialize_files(self, data):
+        """Serialize files for a workflow object.
+
+        :param data: some data object to serialize
+        """
+        from invenio_workflows.models import WorkflowFilesIterator
+        if isinstance(data, WorkflowFilesIterator):
+            return json.dumps([
+                file_obj.dumps() for file_obj in data
+            ], **self._format_args())
+        else:
+            return json.dumps(data.dumps(), **self._format_args())
+
     def serialize_search(self, search_result, links=None):
         """Serialize a search result.
 
