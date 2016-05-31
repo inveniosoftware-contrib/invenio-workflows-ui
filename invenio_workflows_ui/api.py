@@ -50,6 +50,8 @@ def record_to_index(record):
     config = current_app.config['WORKFLOWS_UI_DATA_TYPES'].get(
         record["_workflow"]["data_type"]
     )
+    if not config:
+        return None, None
     return config.get('search_index'), config.get('search_type')
 
 

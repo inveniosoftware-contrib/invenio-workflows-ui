@@ -47,6 +47,8 @@ class WorkflowIndexer(RecordIndexer):
         :param record: Record instance.
         """
         index, doc_type = self.record_to_index(record)
+        if not index or not doc_type:
+            return
         return self.client.index(
             id=str(record.id),
             index=index,
