@@ -44,6 +44,7 @@ from invenio_db import db
 from invenio_rest import ContentNegotiatedMethodView
 from invenio_rest.errors import RESTException
 from invenio_search import RecordsSearch
+from flask_login import current_user
 
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -322,6 +323,10 @@ class WorkflowActionResource(ContentNegotiatedMethodView):
 
     @pass_workflow_object
     def post(self, workflow_ui_object, action, *args, **kwargs):
+
+        kwargs['request_data'] = request.json
+        kwargs['id_user'] = current_user.get_id()
+
         response = getattr(workflow_ui_object, action)(*args, **kwargs)
         db.session.commit()
 
