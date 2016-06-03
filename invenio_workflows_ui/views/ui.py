@@ -214,17 +214,10 @@ def create_blueprint(config, url_endpoint, context_processors):
         )
 
         formatted_data = workflow_object.get_formatted_data()
-        action_name = workflow_object.get_action()
-        if action_name:
-            action = actions[action_name]
-            rendered_actions = action().render(workflow_object)
-        else:
-            rendered_actions = {}
 
         return render_template(
             current_app.config['WORKFLOWS_UI_DETAILS_TEMPLATE'],
             workflow_object=workflow_object,
-            rendered_actions=rendered_actions,
             data_preview=formatted_data,
             workflow_name=workflow_object.get_workflow_name() or "",
             previous_object_id=previous_object_id,

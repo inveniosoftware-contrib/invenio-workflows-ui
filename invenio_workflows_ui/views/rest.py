@@ -387,13 +387,15 @@ class WorkflowBulkActionResource(ContentNegotiatedMethodView):
             **kwargs
         )
 
-    def post(self, object_ids, action, *args, **kwargs):
+    def post(self, action, *args, **kwargs):
         """Handle deposit action."""
         from flask_login import current_user
 
         # Add data to kwargs (needed for potential async tasks)
         kwargs['request_data'] = request.json
         kwargs['id_user'] = current_user.get_id()
+
+        object_ids = request.json.get('object_ids', [])
 
         async_task = resolve_actions.delay(object_ids, action, *args, **kwargs)
 
