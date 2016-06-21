@@ -107,6 +107,10 @@ setup(
             'invenio_workflows_ui = invenio_workflows_ui:InvenioWorkflowsUIREST',
             'invenio_workflows = invenio_workflows:InvenioWorkflows',
         ],
+        'invenio_access.actions': [
+            'holdingpen_admin_access'
+            ' = invenio_workflows_ui.permissions:action_admin_access',
+        ],
         'invenio_celery.tasks': [
             'invenio_workflows_ui = invenio_workflows_ui.tasks',
         ],

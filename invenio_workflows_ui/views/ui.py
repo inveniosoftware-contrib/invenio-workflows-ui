@@ -69,6 +69,7 @@ from ..utils import (
     Pagination,
     obj_or_import_string
 )
+from ..permissions import admin_permission_factory
 
 
 def create_blueprint(config, url_endpoint, context_processors):
@@ -103,6 +104,8 @@ def create_blueprint(config, url_endpoint, context_processors):
     @login_required
     def index():
         """Display basic dashboard interface of Workflows UI."""
+        if not admin_permission_factory().can():
+            abort(403)
         q = '_workflow.status:"{0}"'
         error_state_total = _search(
             q=q.format(ObjectStatus.labels[ObjectStatus.ERROR.value])
@@ -117,6 +120,8 @@ def create_blueprint(config, url_endpoint, context_processors):
     @blueprint.route('/load', methods=['GET', 'POST'])
     @login_required
     def load():
+        if not admin_permission_factory().can():
+            abort(403)
         """Load objects for the table."""
         query_string = request.args.get("search") or ""  # empty to show all
         sort_key = request.args.get('sort_key', "_workflow.modified")
@@ -175,6 +180,8 @@ def create_blueprint(config, url_endpoint, context_processors):
     @login_required
     def list_objects(search_value=None):
         """Display main table interface of workflows UI."""
+        if not admin_permission_factory().can():
+            abort(403)
         search_value = search_value or session.get(
             "workflows_ui_search",
             '_workflow.status:"{0}"'.format(
@@ -206,6 +213,8 @@ def create_blueprint(config, url_endpoint, context_processors):
     @login_required
     def details(objectid):
         """Display info about the object."""
+        if not admin_permission_factory().can():
+            abort(403)
         workflow_object = WorkflowObject.query.get_or_404(objectid)
 
         previous_object_id, next_object_id = get_previous_next_objects(

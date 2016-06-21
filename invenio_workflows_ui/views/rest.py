@@ -52,6 +52,7 @@ from ..search import default_search_factory
 from ..tasks import resolve_actions
 from ..utils import obj_or_import_string
 from ..proxies import workflow_api_class
+from ..permissions import admin_permission_factory
 
 
 def create_blueprint(config, context_processors):
@@ -222,6 +223,8 @@ class WorkflowsListResource(ContentNegotiatedMethodView):
         :returns: the search result containing hits and aggregations as
         returned by invenio-search.
         """
+        if not admin_permission_factory().can():
+            abort(403)
         page = request.values.get('page', 1, type=int)
         size = request.values.get('size', 10, type=int)
         if page * size >= self.max_result_window:
