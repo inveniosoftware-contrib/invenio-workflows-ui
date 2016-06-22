@@ -46,7 +46,7 @@ from invenio_rest.errors import RESTException
 from invenio_search import RecordsSearch
 from flask_login import current_user
 
-from sqlalchemy.orm.exc import NoResultFound
+from invenio_workflows.errors import WorkflowsMissingObject
 
 from ..search import default_search_factory
 from ..tasks import resolve_actions
@@ -174,7 +174,7 @@ def pass_workflow_object(f):
     def inner(self, object_id, *args, **kwargs):
         try:
             workflow_ui_object = workflow_api_class.get_record(object_id)
-        except NoResultFound:
+        except WorkflowsMissingObject:
             return abort(404)
         return f(
             self,

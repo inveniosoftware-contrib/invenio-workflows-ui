@@ -57,5 +57,5 @@ def test_init():
 def test_view(app):
     """Test view."""
     with app.test_client() as client:
-        res = client.get("/workflows/index", follow_redirects=True)
+        res = client.get("/workflows/", follow_redirects=True)
         assert res.status_code == 401
