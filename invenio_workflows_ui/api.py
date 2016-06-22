@@ -38,8 +38,8 @@ from invenio_db import db
 from invenio_records import Record
 from invenio_records.errors import MissingModelError
 
-from invenio_workflows import ObjectStatus, WorkflowObject, resume
-from invenio_workflows.proxies import workflows
+from invenio_workflows import ObjectStatus, resume
+from invenio_workflows.proxies import workflows, workflow_object_class
 
 from .proxies import actions
 from .indexer import WorkflowIndexer
@@ -101,8 +101,7 @@ class WorkflowUIRecord(Record):
         Raises database exception if record does not exists.
         """
         with db.session.no_autoflush:
-            query = WorkflowObject.query.filter_by(id=id_)
-            obj = query.one()
+            obj = workflow_object_class.get(id_)
             return cls(cls.record_from_model(obj), model=obj)
 
     def commit(self):
@@ -124,8 +123,9 @@ class WorkflowUIRecord(Record):
     def record_from_model(workflow_object):
         """Build data from workflow object.
 
-        NOTE: This entire function may in principle be in invenio_workflows
-        WorkflowObject model as a to_dict() kind of function of the model.
+        NOTE: This entire function may in principle be in
+        workflow_object_class model as a to_dict() kind of function of
+        the model.
         """
         record = {}
         record["id"] = workflow_object.id

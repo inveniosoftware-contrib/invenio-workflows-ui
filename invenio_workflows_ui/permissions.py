@@ -27,7 +27,7 @@
 import pkg_resources
 from flask_principal import ActionNeed
 
-action_admin_access = ActionNeed('holdingpen-admin-access')
+action_admin_access = ActionNeed('workflows-ui-admin-access')
 
 
 def admin_permission_factory():
