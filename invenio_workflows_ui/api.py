@@ -90,10 +90,10 @@ class WorkflowUIRecord(Record):
 
     @classmethod
     @index
-    def create(cls, workflow_object, **kwargs):
+    def create(cls, workfow_model, **kwargs):
         """Create a indexable workflow JSON."""
-        record = cls.record_from_model(workflow_object)
-        return cls(record, model=workflow_object, **kwargs)
+        record = cls.record_from_model(workfow_model)
+        return cls(record, model=workfow_model, **kwargs)
 
     @classmethod
     def get_record(cls, id_, with_deleted=False):
@@ -101,7 +101,7 @@ class WorkflowUIRecord(Record):
         Raises database exception if record does not exists.
         """
         with db.session.no_autoflush:
-            obj = workflow_object_class.get(id_)
+            obj = workflow_object_class.get(id_).model
             return cls(cls.record_from_model(obj), model=obj)
 
     def commit(self):
@@ -120,7 +120,7 @@ class WorkflowUIRecord(Record):
         return self
 
     @staticmethod
-    def record_from_model(workflow_object):
+    def record_from_model(workfow_model):
         """Build data from workflow object.
 
         NOTE: This entire function may in principle be in
@@ -128,19 +128,19 @@ class WorkflowUIRecord(Record):
         the model.
         """
         record = {}
-        record["id"] = workflow_object.id
+        record["id"] = workfow_model.id
         record["_workflow"] = {}
-        record["_workflow"]["data_type"] = workflow_object.data_type
-        record["_workflow"]["status"] = workflow_object.status.name
-        record["_workflow"]["id_user"] = workflow_object.id_user
-        record["_workflow"]["id_parent"] = workflow_object.id_parent
+        record["_workflow"]["data_type"] = workfow_model.data_type
+        record["_workflow"]["status"] = workfow_model.status.name
+        record["_workflow"]["id_user"] = workfow_model.id_user
+        record["_workflow"]["id_parent"] = workfow_model.id_parent
         record["_workflow"]["id_workflow"] = None
         record["_workflow"]["workflow_class"] = None
-        record["_workflow"]["workflow_position"] = workflow_object.callback_pos
+        record["_workflow"]["workflow_position"] = workfow_model.callback_pos
         record["_workflow"]["workflow_name"] = None
 
-        if workflow_object.workflow and workflow_object.workflow.name in workflows:
-            workflow_definition = workflows.get(workflow_object.workflow.name)
+        if workfow_model.workflow and workfow_model.workflow.name in workflows:
+            workflow_definition = workflows.get(workfow_model.workflow.name)
 
             if not record["_workflow"]["data_type"] and workflow_definition and hasattr(
                     workflow_definition, 'data_type'):
@@ -149,15 +149,15 @@ class WorkflowUIRecord(Record):
             if workflow_definition and hasattr(workflow_definition, 'name'):
                 record["_workflow"]["workflow_name"] = workflow_definition.name
 
-            if workflow_object.id_workflow:
-                record["_workflow"]["id_workflow"] = six.text_type(workflow_object.id_workflow)
+            if workfow_model.id_workflow:
+                record["_workflow"]["id_workflow"] = six.text_type(workfow_model.id_workflow)
 
-            record["_workflow"]["workflow_class"] = workflow_object.workflow.name
+            record["_workflow"]["workflow_class"] = workfow_model.workflow.name
 
-        if isinstance(workflow_object.data, dict):
-            record.update({"metadata": workflow_object.data})
-        if isinstance(workflow_object.extra_data, dict):
-            record.update({"_extra_data": workflow_object.extra_data})
+        if isinstance(workfow_model.data, dict):
+            record.update({"metadata": workfow_model.data})
+        if isinstance(workfow_model.extra_data, dict):
+            record.update({"_extra_data": workfow_model.extra_data})
         return record
 
     def update_model(self):
