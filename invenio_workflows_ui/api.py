@@ -109,9 +109,9 @@ class WorkflowUIRecord(Record):
         with db.session.begin_nested():
             self.update_model()
 
-    @index(delete=True)
     def delete(self, force=False):
-        """Delete model from DB and search index."""
+        """Delete model from DB and search index (the index is deleted using
+        a signal, see the `receivers` module)."""
         if self.model is None:
             raise MissingModelError()
 
