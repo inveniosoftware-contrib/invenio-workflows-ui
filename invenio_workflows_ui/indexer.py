@@ -33,10 +33,16 @@ class WorkflowIndexer(RecordIndexer):
     def _prepare_record(record, index, doc_type):
         """Prepare the workflow object record for ES."""
         data = record.dumps()
-        data['_created'] = pytz.utc.localize(record.model.created).isoformat() \
-            if record.model.created else None
-        data['_updated'] = pytz.utc.localize(record.model.modified).isoformat() \
-            if record.model.modified else None
+        if record.model.created.tzinfo:
+            data['_created'] = record.model.created.isoformat()
+        else:
+            data['_created'] = pytz.utc.localize(record.model.created).isoformat() \
+                if record.model.created else None
+        if record.model.modified.tzinfo:
+            data['_updated'] = record.model.modified.isoformat()
+        else:
+            data['_updated'] = pytz.utc.localize(record.model.modified).isoformat() \
+                if record.model.modified else None
         return data
 
     def index(self, record):
