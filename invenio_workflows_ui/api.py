@@ -201,8 +201,11 @@ class WorkflowUIRecord(Record):
 
         if 'callback_pos' in kwargs:
             self.workflow.callback_pos = kwargs['callback_pos']
-            self.workflow.save()
-            db.session.commit()
+        else:
+            self.workflow.callback_pos = 1
+
+        self.workflow.save()
+        db.session.commit()
         return resume.delay(
             oid=self.workflow.id,
             restart_point="restart_task"
@@ -215,8 +218,9 @@ class WorkflowUIRecord(Record):
 
         if 'callback_pos' in kwargs:
             self.workflow.callback_pos = kwargs['callback_pos']
-            self.workflow.save()
-            db.session.commit()
+
+        self.workflow.save()
+        db.session.commit()
         return resume.delay(
             oid=self.id,
             restart_point="continue_next"
