@@ -89,6 +89,7 @@ class WorkflowUIRecord(Record):
     )
 
     def __init__(self, *args, **kwargs):
+        """Represents a workflow object record for indexing."""
         try:
             self.workflow = kwargs.pop('workflow')
         except KeyError:
@@ -109,6 +110,7 @@ class WorkflowUIRecord(Record):
     @classmethod
     def get_record(cls, id_, with_deleted=False):
         """Get record instance.
+
         Raises database exception if record does not exists.
         """
         with db.session.no_autoflush:
@@ -121,8 +123,10 @@ class WorkflowUIRecord(Record):
             self.update_model()
 
     def delete(self, force=False):
-        """Delete model from DB and search index (the index is deleted using
-        a signal, see the `receivers` module)."""
+        """Delete model from DB and search index.
+
+        The index is deleted using a signal, see the `receivers` module).
+        """
         if self.model is None:
             raise MissingModelError()
 

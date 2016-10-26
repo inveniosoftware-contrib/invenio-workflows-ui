@@ -44,13 +44,8 @@ from flask import (
 
 from flask_login import login_required
 
-from invenio_search import RecordsSearch
-
 from invenio_workflows.errors import WorkflowsMissingObject
 
-from ..search import (
-    default_search_factory
-)
 from invenio_workflows.proxies import workflow_object_class
 
 from ..utils import (
@@ -61,7 +56,6 @@ from ..permissions import admin_permission_factory
 
 def create_blueprint(config, url_endpoint, context_processors):
     """Create UI blueprint for invenio-workflows-ui."""
-
     blueprint = Blueprint(
         'invenio_workflows_ui',
         __name__,

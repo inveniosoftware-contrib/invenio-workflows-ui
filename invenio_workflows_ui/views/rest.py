@@ -326,6 +326,7 @@ class WorkflowActionResource(ContentNegotiatedMethodView):
 
     @pass_workflow_object
     def post(self, workflow_ui_object, action, *args, **kwargs):
+        """Post."""
 
         kwargs['request_data'] = request.json
         kwargs['id_user'] = current_user.get_id()
@@ -355,6 +356,7 @@ class WorkflowFilesResource(ContentNegotiatedMethodView):
 
     @pass_workflow_object
     def get(self, workflow_ui_object, *args, **kwargs):
+        """Get."""
         return self.make_response(workflow_ui_object.files)
 
 
@@ -373,6 +375,7 @@ class WorkflowFileResource(ContentNegotiatedMethodView):
 
     @pass_workflow_object
     def get(self, workflow_ui_object, key, *args, **kwargs):
+        """Get."""
         file_obj = workflow_ui_object.files[key]
         return self.make_response(file_obj)
 
