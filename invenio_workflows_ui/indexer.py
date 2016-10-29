@@ -36,13 +36,17 @@ class WorkflowIndexer(RecordIndexer):
         if record.model.created.tzinfo:
             data['_created'] = record.model.created.isoformat()
         else:
-            data['_created'] = pytz.utc.localize(record.model.created).isoformat() \
+            data['_created'] = (
+                pytz.utc.localize(record.model.created).isoformat()
                 if record.model.created else None
+            )
         if record.model.modified.tzinfo:
             data['_updated'] = record.model.modified.isoformat()
         else:
-            data['_updated'] = pytz.utc.localize(record.model.modified).isoformat() \
+            data['_updated'] = (
+                pytz.utc.localize(record.model.modified).isoformat()
                 if record.model.modified else None
+            )
         return data
 
     def index(self, record):

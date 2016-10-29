@@ -22,10 +22,9 @@
 from __future__ import absolute_import, print_function
 
 from elasticsearch.exceptions import NotFoundError
-from sqlalchemy.event import listen
-
 from invenio_workflows.models import WorkflowObjectModel
 from invenio_workflows.signals import workflow_object_after_save
+from sqlalchemy.event import listen
 
 from .proxies import workflow_api_class
 
