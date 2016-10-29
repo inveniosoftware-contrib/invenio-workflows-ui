@@ -28,12 +28,39 @@ import os
 
 import sphinx.environment
 from docutils.utils import get_source_line
+from autosemver.packaging import (
+    get_authors,
+    get_changelog,
+    get_current_version,
+)
 
 
-def _warn_node(self, msg, node):
+if not os.path.exists('_build/html/_static'):
+    os.makedirs('_build/html/_static')
+
+
+with open('_build/html/_static/CHANGELOG.txt', 'w') as changelog_fd:
+    changelog_fd.write(
+        get_changelog(
+            project_dir='..',
+            bugtracker_url=(
+                'https://github.com/inveniosoftware-contrib/inspire-workflows/'
+                'issues/'
+            ),
+        ).encode('utf-8')
+    )
+
+
+with open('_build/html/_static/AUTHORS.txt', 'w') as changelog_fd:
+    changelog_fd.write(
+        '\n'.join(get_authors(project_dir='..')).encode('utf-8')
+    )
+
+
+def _warn_node(self, msg, node, *args, **kwargs):
     """Do not warn on external images."""
     if not msg.startswith('nonlocal image URI found:'):
-        self._warnfunc(msg, '{0}:{1}'.format(get_source_line(node)))
+        self._warnfunc(msg, '%s:%s' % get_source_line(node))
 
 sphinx.environment.BuildEnvironment.warn_node = _warn_node
 
@@ -79,11 +106,7 @@ author = u'CERN'
 #
 # The short X.Y version.
 
-# Get the version string. Cannot be done with import!
-g = {}
-with open(os.path.join('..', 'invenio_workflows_ui', 'version.py'), 'rt') as fp:
-    exec(fp.read(), g)
-    version = g['__version__']
+version = get_current_version(project_dir='..')
 
 # The full version, including alpha/beta/rc tags.
 release = version

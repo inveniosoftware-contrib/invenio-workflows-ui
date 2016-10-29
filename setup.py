@@ -24,14 +24,10 @@
 
 """Invenio module which acts as a UI layer for invenio-workflows."""
 
-import os
-
 from setuptools import find_packages, setup
 
-readme = open('README.rst').read()
-history = open('CHANGES.rst').read()
 
-tests_require = [
+TESTS_REQUIRE = [
     'check-manifest>=0.25',
     'coverage>=4.0',
     'isort>=4.2.2',
@@ -42,7 +38,7 @@ tests_require = [
     'pytest>=2.8.0',
 ]
 
-extras_require = {
+EXTRAS_REQUIRE = {
     'docs': [
         'Sphinx>=1.3',
     ],
@@ -58,21 +54,24 @@ extras_require = {
     'sqlite': [
         'invenio-db>=1.0.0a9',
     ],
-    'tests': tests_require,
+    'tests': TESTS_REQUIRE,
 }
 
-extras_require['all'] = []
-for name, reqs in extras_require.items():
+EXTRAS_REQUIRE['all'] = []
+for name, reqs in EXTRAS_REQUIRE.items():
     if name in ('mysql', 'postgresql', 'sqlite'):
         continue
-    extras_require['all'].extend(reqs)
+    EXTRAS_REQUIRE['all'].extend(reqs)
 
-setup_requires = [
+SETUP_REQUIRES = [
+    'autosemver~=0.1.9',
     'Babel>=1.3',
     'pytest-runner>=2.6.2',
 ]
 
-install_requires = [
+
+INSTALL_REQUIRES = [
+    'autosemver~=0.1.9',
     'Flask-BabelEx>=0.9.2',
     'invenio-search>=1.0.0a5',
     'invenio-indexer>=1.0.0a5',
@@ -82,63 +81,60 @@ install_requires = [
     'flask-principal',
 ]
 
-packages = find_packages()
+URL = 'https://github.com/inspirehep/invenio-workflows-ui'
 
 
-# Get the version string. Cannot be done with import!
-g = {}
-with open(os.path.join('invenio_workflows_ui', 'version.py'), 'rt') as fp:
-    exec(fp.read(), g)
-    version = g['__version__']
-
-setup(
-    name='invenio-workflows-ui',
-    version=version,
-    description=__doc__,
-    long_description=readme + '\n\n' + history,
-    keywords='invenio workflows gui interface content curation',
-    license='GPLv2',
-    author='CERN',
-    author_email='info@invenio-software.org',
-    url='https://github.com/inspirehep/invenio-workflows-ui',
-    packages=packages,
-    zip_safe=False,
-    include_package_data=True,
-    platforms='any',
-    entry_points={
-        'invenio_base.apps': [
-            'invenio_workflows_ui = invenio_workflows_ui:InvenioWorkflowsUI',
+if __name__ == '__main__':
+    setup(
+        name='invenio-workflows-ui',
+        autosemver=True,
+        description=__doc__,
+        long_description=open('README.rst').read(),
+        keywords='invenio workflows gui interface content curation',
+        license='GPLv2',
+        author='CERN',
+        author_email='info@invenio-software.org',
+        url=URL,
+        bugtracker_url=URL + '/issues/',
+        packages=find_packages(),
+        zip_safe=False,
+        include_package_data=True,
+        platforms='any',
+        entry_points={
+            'invenio_base.apps': [
+                'invenio_workflows_ui '
+                '= invenio_workflows_ui:InvenioWorkflowsUI',
+            ],
+            'invenio_base.api_apps': [
+                'invenio_workflows_ui '
+                '= invenio_workflows_ui:InvenioWorkflowsUIREST',
+            ],
+            'invenio_access.actions': [
+                'holdingpen_admin_access'
+                ' = invenio_workflows_ui.permissions:action_admin_access',
+            ],
+            'invenio_celery.tasks': [
+                'invenio_workflows_ui = invenio_workflows_ui.tasks',
+            ]
+        },
+        extras_require=EXTRAS_REQUIRE,
+        install_requires=INSTALL_REQUIRES,
+        setup_requires=SETUP_REQUIRES,
+        tests_require=TESTS_REQUIRE,
+        classifiers=[
+            'Environment :: Web Environment',
+            'Intended Audience :: Developers',
+            'License :: OSI Approved :: GNU General Public License v2 (GPLv2)',
+            'Operating System :: OS Independent',
+            'Programming Language :: Python',
+            'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
+            'Topic :: Software Development :: Libraries :: Python Modules',
+            'Programming Language :: Python :: 2',
+            'Programming Language :: Python :: 2.7',
+            'Programming Language :: Python :: 3',
+            'Programming Language :: Python :: 3.3',
+            'Programming Language :: Python :: 3.4',
+            'Programming Language :: Python :: 3.5',
+            'Development Status :: 1 - Planning',
         ],
-        'invenio_base.api_apps': [
-            'invenio_workflows_ui '
-            '= invenio_workflows_ui:InvenioWorkflowsUIREST',
-        ],
-        'invenio_access.actions': [
-            'holdingpen_admin_access'
-            ' = invenio_workflows_ui.permissions:action_admin_access',
-        ],
-        'invenio_celery.tasks': [
-            'invenio_workflows_ui = invenio_workflows_ui.tasks',
-        ]
-    },
-    extras_require=extras_require,
-    install_requires=install_requires,
-    setup_requires=setup_requires,
-    tests_require=tests_require,
-    classifiers=[
-        'Environment :: Web Environment',
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: GNU General Public License v2 (GPLv2)',
-        'Operating System :: OS Independent',
-        'Programming Language :: Python',
-        'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
-        'Topic :: Software Development :: Libraries :: Python Modules',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Development Status :: 1 - Planning',
-    ],
-)
+    )
