@@ -81,7 +81,7 @@ INSTALL_REQUIRES = [
     'flask-principal',
 ]
 
-URL = 'https://github.com/inspirehep/invenio-workflows-ui'
+URL = 'https://github.com/inveniosoftware-contrib/invenio-workflows-ui'
 
 
 if __name__ == '__main__':

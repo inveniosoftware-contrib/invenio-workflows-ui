@@ -161,14 +161,16 @@ html_theme = 'alabaster'
 
 html_theme_options = {
     'description': 'UI layer for invenio-workflows.',
-    'github_user': 'inspirehep',
+    'github_user': 'inveniosoftware-contrib',
     'github_repo': 'invenio-workflows-ui',
     'github_button': False,
     'github_banner': True,
     'show_powered_by': False,
     'extra_nav_links': {
-        'invenio-workflows-ui@GitHub': 'http://github.com/inspirehep/invenio-workflows-ui',
-        'invenio-workflows-ui@PyPI': 'http://pypi.python.org/pypi/invenio-workflows-ui/',
+        'invenio-workflows-ui@GitHub':
+            'http://github.com/inveniosoftware-contrib/invenio-workflows-ui',
+        'invenio-workflows-ui@PyPI':
+            'http://pypi.python.org/pypi/invenio-workflows-ui/',
     }
 }
 

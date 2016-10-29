@@ -25,20 +25,20 @@
  invenio-workflows-ui
 ======================
 
-.. image:: https://img.shields.io/travis/inspirehep/invenio-workflows-ui.svg
-        :target: https://travis-ci.org/inspirehep/invenio-workflows-ui
+.. image:: https://img.shields.io/travis/inveniosoftware-contrib/invenio-workflows-ui.svg
+        :target: https://travis-ci.org/inveniosoftware-contrib/invenio-workflows-ui
 
-.. image:: https://img.shields.io/coveralls/inspirehep/invenio-workflows-ui.svg
-        :target: https://coveralls.io/r/inspirehep/invenio-workflows-ui
+.. image:: https://img.shields.io/coveralls/inveniosoftware-contrib/invenio-workflows-ui.svg
+        :target: https://coveralls.io/r/inveniosoftware-contrib/invenio-workflows-ui
 
-.. image:: https://img.shields.io/github/tag/inspirehep/invenio-workflows-ui.svg
-        :target: https://github.com/inspirehep/invenio-workflows-ui/releases
+.. image:: https://img.shields.io/github/tag/inveniosoftware-contrib/invenio-workflows-ui.svg
+        :target: https://github.com/inveniosoftware-contrib/invenio-workflows-ui/releases
 
 .. image:: https://img.shields.io/pypi/dm/invenio-workflows-ui.svg
         :target: https://pypi.python.org/pypi/invenio-workflows-ui
 
-.. image:: https://img.shields.io/github/license/inspirehep/invenio-workflows-ui.svg
-        :target: https://github.com/inspirehep/invenio-workflows-ui/blob/master/LICENSE
+.. image:: https://img.shields.io/github/license/inveniosoftware-contrib/invenio-workflows-ui.svg
+        :target: https://github.com/inveniosoftware-contrib/invenio-workflows-ui/blob/master/LICENSE
 
 
 Invenio module which acts as a UI layer for `invenio-workflows`.
