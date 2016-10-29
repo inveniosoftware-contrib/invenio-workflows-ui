@@ -46,6 +46,9 @@ extras_require = {
     'docs': [
         'Sphinx>=1.3',
     ],
+    'ui': [
+        'invenio-search-ui>=1.0.0a4',
+    ],
     'postgresql': [
         'invenio-db[postgresql]>=1.0.0a9',
     ],
@@ -73,7 +76,10 @@ install_requires = [
     'Flask-BabelEx>=0.9.2',
     'invenio-search>=1.0.0a5',
     'invenio-indexer>=1.0.0a5',
-    #'invenio-workflows>=1.0.0a1',
+    'invenio-rest',
+    'flask-login',
+    'invenio-workflows~=6.0.2',
+    'flask-principal',
 ]
 
 packages = find_packages()
@@ -104,8 +110,8 @@ setup(
             'invenio_workflows_ui = invenio_workflows_ui:InvenioWorkflowsUI',
         ],
         'invenio_base.api_apps': [
-            'invenio_workflows_ui = invenio_workflows_ui:InvenioWorkflowsUIREST',
-            'invenio_workflows = invenio_workflows:InvenioWorkflows',
+            'invenio_workflows_ui '
+            '= invenio_workflows_ui:InvenioWorkflowsUIREST',
         ],
         'invenio_access.actions': [
             'holdingpen_admin_access'
@@ -113,12 +119,7 @@ setup(
         ],
         'invenio_celery.tasks': [
             'invenio_workflows_ui = invenio_workflows_ui.tasks',
-        ],
-        'invenio_assets.bundles': [
-            'invenio_workflows_ui_css = invenio_workflows_ui.bundles:css',
-            'invenio_workflows_ui_js_list = invenio_workflows_ui.bundles:js_list',
-            'invenio_workflows_ui_js_details = invenio_workflows_ui.bundles:js_details',
-        ],
+        ]
     },
     extras_require=extras_require,
     install_requires=install_requires,

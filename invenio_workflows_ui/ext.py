@@ -29,8 +29,8 @@ from __future__ import absolute_import, print_function
 import pkg_resources
 
 from . import config
-from .views import rest, ui
 from .utils import obj_or_import_string
+from .views import rest, ui
 
 
 class _WorkflowsUIState(object):

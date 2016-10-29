@@ -124,5 +124,25 @@ WORKFLOWS_UI_REST_DEFAULT_SORT = {
 WORKFLOWS_UI_CACHE_PREFIX = "WorkflowsUI::"
 WORKFLOWS_UI_LIST_TEMPLATE = "invenio_workflows_ui/list.html"
 WORKFLOWS_UI_DETAILS_TEMPLATE = "invenio_workflows_ui/details.html"
-WORKFLOWS_UI_LIST_ROW_TEMPLATE = "invenio_workflows_ui/list_row.html"
 WORKFLOWS_UI_INDEX_TEMPLATE = "invenio_workflows_ui/index.html"
+
+WORKFLOWS_UI_JSTEMPLATE_RESULTS = (
+    "templates/invenio_workflows_ui/results.html"
+)
+WORKFLOWS_UI_JSTEMPLATE_COUNT = (
+    "templates/invenio_search_ui/count.html"
+)
+WORKFLOWS_UI_JSTEMPLATE_PAGINATION = (
+    "templates/invenio_search_ui/pagination.html"
+)
+WORKFLOWS_UI_JSTEMPLATE_SELECT_BOX = (
+    "templates/invenio_search_ui/selectbox.html"
+)
+WORKFLOWS_UI_JSTEMPLATE_SORT_ORDER = (
+    "templates/invenio_search_ui/togglebutton.html"
+)
+WORKFLOWS_UI_JSTEMPLATE_ERROR = "templates/invenio_search_ui/error.html"
+WORKFLOWS_UI_JSTEMPLATE_LOADING = "templates/invenio_search_ui/loading.html"
+WORKFLOWS_UI_JSTEMPLATE_FACETS = (
+    "node_modules/invenio-search-js/dist/templates/facets.html"
+)

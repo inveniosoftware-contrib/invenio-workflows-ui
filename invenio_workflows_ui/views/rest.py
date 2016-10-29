@@ -46,7 +46,7 @@ from invenio_rest.errors import RESTException
 from invenio_search import RecordsSearch
 from flask_login import current_user
 
-from sqlalchemy.orm.exc import NoResultFound
+from invenio_workflows.errors import WorkflowsMissingObject
 
 from ..search import default_search_factory
 from ..tasks import resolve_actions
@@ -174,7 +174,7 @@ def pass_workflow_object(f):
     def inner(self, object_id, *args, **kwargs):
         try:
             workflow_ui_object = workflow_api_class.get_record(object_id)
-        except NoResultFound:
+        except WorkflowsMissingObject:
             return abort(404)
         return f(
             self,
@@ -326,7 +326,7 @@ class WorkflowActionResource(ContentNegotiatedMethodView):
 
     @pass_workflow_object
     def post(self, workflow_ui_object, action, *args, **kwargs):
-
+        """Post."""
         kwargs['request_data'] = request.json
         kwargs['id_user'] = current_user.get_id()
 
@@ -355,6 +355,7 @@ class WorkflowFilesResource(ContentNegotiatedMethodView):
 
     @pass_workflow_object
     def get(self, workflow_ui_object, *args, **kwargs):
+        """Get."""
         return self.make_response(workflow_ui_object.files)
 
 
@@ -373,6 +374,7 @@ class WorkflowFileResource(ContentNegotiatedMethodView):
 
     @pass_workflow_object
     def get(self, workflow_ui_object, key, *args, **kwargs):
+        """Get."""
         file_obj = workflow_ui_object.files[key]
         return self.make_response(file_obj)
 
