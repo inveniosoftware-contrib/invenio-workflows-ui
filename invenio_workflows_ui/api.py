@@ -25,24 +25,19 @@
 
 from __future__ import absolute_import, print_function
 
-import six
-
 from functools import partial, wraps
 
-from flask import current_app, request
-
+import six
 from elasticsearch import TransportError
-
+from flask import current_app, request
 from invenio_db import db
-
 from invenio_records import Record
 from invenio_records.errors import MissingModelError
-
 from invenio_workflows import ObjectStatus, resume
-from invenio_workflows.proxies import workflows, workflow_object_class
+from invenio_workflows.proxies import workflow_object_class, workflows
 
-from .proxies import actions
 from .indexer import WorkflowIndexer
+from .proxies import actions
 
 
 def record_to_index(record):
@@ -89,7 +84,7 @@ class WorkflowUIRecord(Record):
     )
 
     def __init__(self, *args, **kwargs):
-        """Represents a workflow object record for indexing."""
+        """Represent a workflow object record for indexing."""
         try:
             self.workflow = kwargs.pop('workflow')
         except KeyError:
@@ -144,35 +139,45 @@ class WorkflowUIRecord(Record):
         """
         record = {}
         record["id"] = workflow_object.id
-        record["_workflow"] = {}
-        record["_workflow"]["data_type"] = workflow_object.data_type
-        record["_workflow"]["status"] = workflow_object.status.name
-        record["_workflow"]["id_user"] = workflow_object.id_user
-        record["_workflow"]["id_parent"] = workflow_object.id_parent
-        record["_workflow"]["id_workflow"] = None
-        record["_workflow"]["workflow_class"] = None
-        record["_workflow"]["workflow_position"] = workflow_object.callback_pos
-        record["_workflow"]["workflow_name"] = None
+        _workflow = {}
+        _workflow["data_type"] = workflow_object.data_type
+        _workflow["status"] = workflow_object.status.name
+        _workflow["id_user"] = workflow_object.id_user
+        _workflow["id_parent"] = workflow_object.id_parent
+        _workflow["id_workflow"] = None
+        _workflow["workflow_class"] = None
+        _workflow["workflow_position"] = workflow_object.callback_pos
+        _workflow["workflow_name"] = None
 
-        if workflow_object.workflow and workflow_object.workflow.name in workflows:
+        if (
+                workflow_object.workflow and
+                workflow_object.workflow.name in workflows
+        ):
             workflow_definition = workflows.get(workflow_object.workflow.name)
 
-            if not record["_workflow"]["data_type"] and workflow_definition and hasattr(
-                    workflow_definition, 'data_type'):
-                record["_workflow"]["data_type"] = workflow_definition.data_type
+            if (
+                    not _workflow["data_type"] and
+                    workflow_definition and
+                    hasattr(workflow_definition, 'data_type')
+            ):
+                _workflow["data_type"] = workflow_definition.data_type
 
             if workflow_definition and hasattr(workflow_definition, 'name'):
-                record["_workflow"]["workflow_name"] = workflow_definition.name
+                _workflow["workflow_name"] = workflow_definition.name
 
             if workflow_object.id_workflow:
-                record["_workflow"]["id_workflow"] = six.text_type(workflow_object.id_workflow)
+                _workflow["id_workflow"] = six.text_type(
+                    workflow_object.id_workflow
+                )
 
-            record["_workflow"]["workflow_class"] = workflow_object.workflow.name
+            _workflow["workflow_class"] = workflow_object.workflow.name
 
         if isinstance(workflow_object.data, dict):
             record.update({"metadata": workflow_object.data})
         if isinstance(workflow_object.extra_data, dict):
             record.update({"_extra_data": workflow_object.extra_data})
+
+        record["_workflow"] = _workflow
         return record
 
     def update_model(self):

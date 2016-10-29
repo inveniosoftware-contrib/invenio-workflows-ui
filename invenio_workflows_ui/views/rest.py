@@ -327,7 +327,6 @@ class WorkflowActionResource(ContentNegotiatedMethodView):
     @pass_workflow_object
     def post(self, workflow_ui_object, action, *args, **kwargs):
         """Post."""
-
         kwargs['request_data'] = request.json
         kwargs['id_user'] = current_user.get_id()
 

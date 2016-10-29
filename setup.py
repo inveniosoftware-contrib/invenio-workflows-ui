@@ -76,7 +76,10 @@ install_requires = [
     'Flask-BabelEx>=0.9.2',
     'invenio-search>=1.0.0a5',
     'invenio-indexer>=1.0.0a5',
-    # 'invenio-workflows>=1.0.0a1',
+    'invenio-rest',
+    'flask-login',
+    'invenio-workflows~=6.0.2',
+    'flask-principal',
 ]
 
 packages = find_packages()
@@ -107,7 +110,8 @@ setup(
             'invenio_workflows_ui = invenio_workflows_ui:InvenioWorkflowsUI',
         ],
         'invenio_base.api_apps': [
-            'invenio_workflows_ui = invenio_workflows_ui:InvenioWorkflowsUIREST',
+            'invenio_workflows_ui '
+            '= invenio_workflows_ui:InvenioWorkflowsUIREST',
         ],
         'invenio_access.actions': [
             'holdingpen_admin_access'
