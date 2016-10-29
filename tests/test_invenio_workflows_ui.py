@@ -32,12 +32,6 @@ from flask import Flask
 from invenio_workflows_ui import InvenioWorkflowsUI
 
 
-def test_version():
-    """Test version import."""
-    from invenio_workflows_ui import __version__
-    assert __version__
-
-
 def test_init():
     """Test extension initialization."""
     app = Flask('testapp')

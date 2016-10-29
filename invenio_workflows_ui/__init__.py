@@ -27,13 +27,11 @@
 from __future__ import absolute_import, print_function
 
 from .ext import InvenioWorkflowsUI, InvenioWorkflowsUIREST
-from .version import __version__
 from .proxies import current_workflows_ui, actions, workflow_api_class
 from .api import WorkflowUIRecord
 from .receivers import *
 
 __all__ = (
-    '__version__',
     'InvenioWorkflowsUI',
     'InvenioWorkflowsUIREST',
     'WorkflowUIRecord',
