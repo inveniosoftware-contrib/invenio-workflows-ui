@@ -64,14 +64,14 @@ for name, reqs in EXTRAS_REQUIRE.items():
     EXTRAS_REQUIRE['all'].extend(reqs)
 
 SETUP_REQUIRES = [
-    'autosemver~=0.1.9',
+    'autosemver~=0.2,>=0.2',
     'Babel>=1.3',
     'pytest-runner>=2.6.2',
 ]
 
 
 INSTALL_REQUIRES = [
-    'autosemver~=0.1.9',
+    'autosemver~=0.2,>=0.2',
     'Flask-BabelEx>=0.9.2',
     'invenio-search>=1.0.0a5',
     'invenio-indexer>=1.0.0a5',
@@ -87,7 +87,6 @@ URL = 'https://github.com/inveniosoftware-contrib/invenio-workflows-ui'
 if __name__ == '__main__':
     setup(
         name='invenio-workflows-ui',
-        autosemver=True,
         description=__doc__,
         long_description=open('README.rst').read(),
         keywords='invenio workflows gui interface content curation',
@@ -95,7 +94,9 @@ if __name__ == '__main__':
         author='CERN',
         author_email='info@invenio-software.org',
         url=URL,
-        bugtracker_url=URL + '/issues/',
+        autosemver={
+            'bugtracker_url': URL + '/issues/',
+        },
         packages=find_packages(),
         zip_safe=False,
         include_package_data=True,
