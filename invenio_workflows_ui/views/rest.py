@@ -295,6 +295,23 @@ class WorkflowObjectResource(ContentNegotiatedMethodView):
         return self.make_response(workflow_ui_object)
 
     @pass_workflow_object
+    # @need_record_permission('read_permission_factory')
+    def put(self, workflow_ui_object, **kwargs):
+        """Replace a workflow object.
+
+        :param workflow_ui_object: workflow_api_class object.
+        :returns: The modified record.
+        """
+        data = request.get_json()
+        if data:
+            workflow_ui_object.clear()
+            workflow_ui_object.update(data)
+            workflow_ui_object.commit()
+            db.session.commit()
+
+        return self.make_response(workflow_ui_object)
+
+    @pass_workflow_object
     # @need_record_permission('delete_permission_factory')
     def delete(self, workflow_ui_object, **kwargs):
         """Delete a workflow object.
