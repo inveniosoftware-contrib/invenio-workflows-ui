@@ -42,3 +42,6 @@ def admin_permission_factory():
         from flask_principal import Permission
 
     return Permission(action_admin_access)
+
+
+action_admin_permission = admin_permission_factory()

@@ -51,7 +51,7 @@ from invenio_workflows.proxies import workflow_object_class
 from ..utils import (
     obj_or_import_string
 )
-from ..permissions import admin_permission_factory
+from ..permissions import action_admin_permission
 
 
 def create_blueprint(config, url_endpoint, context_processors):
@@ -67,10 +67,9 @@ def create_blueprint(config, url_endpoint, context_processors):
     @blueprint.route('/', methods=['GET', 'POST'])
     @blueprint.route('/index', methods=['GET', 'POST'])
     @login_required
+    @action_admin_permission.require(http_exception=403)
     def index():
         """Display basic dashboard interface of Workflows UI."""
-        if not admin_permission_factory().can():
-            abort(403)
         return render_template(
             current_app.config['WORKFLOWS_UI_INDEX_TEMPLATE']
         )
@@ -79,10 +78,9 @@ def create_blueprint(config, url_endpoint, context_processors):
     @blueprint.route('/list/', methods=['GET', ])
     @blueprint.route('/list/<search_value>', methods=['GET', ])
     @login_required
+    @action_admin_permission.require(http_exception=403)
     def list_objects(search_value=None):
         """Display main table interface of workflows UI."""
-        if not admin_permission_factory().can():
-            abort(403)
         return render_template(
             current_app.config['WORKFLOWS_UI_LIST_TEMPLATE'],
             search=search_value
@@ -91,10 +89,9 @@ def create_blueprint(config, url_endpoint, context_processors):
     @blueprint.route('/<int:objectid>', methods=['GET', 'POST'])
     @blueprint.route('/details/<int:objectid>', methods=['GET', 'POST'])
     @login_required
+    @action_admin_permission.require(http_exception=403)
     def details(objectid):
         """Display info about the object."""
-        if not admin_permission_factory().can():
-            abort(403)
         try:
             workflow_object = workflow_object_class.get(objectid)
         except WorkflowsMissingObject:
