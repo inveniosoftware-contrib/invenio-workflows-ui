@@ -35,6 +35,7 @@ from invenio_records import Record
 from invenio_records.errors import MissingModelError
 from invenio_workflows import ObjectStatus, resume
 from invenio_workflows.proxies import workflow_object_class, workflows
+from workflow.engine_db import WorkflowStatus
 
 from .indexer import WorkflowIndexer
 from .proxies import actions
@@ -211,8 +212,9 @@ class WorkflowUIRecord(Record):
         if 'callback_pos' in kwargs:
             self.workflow.callback_pos = kwargs['callback_pos']
         else:
-            self.workflow.callback_pos = 1
+            self.workflow.callback_pos = [1]
 
+        self.workflow.status = ObjectStatus[WorkflowStatus.RUNNING.name]
         self.workflow.save()
         db.session.commit()
         return resume.delay(
@@ -228,6 +230,7 @@ class WorkflowUIRecord(Record):
         if 'callback_pos' in kwargs:
             self.workflow.callback_pos = kwargs['callback_pos']
 
+        self.workflow.status = ObjectStatus[WorkflowStatus.RUNNING.name]
         self.workflow.save()
         db.session.commit()
         return resume.delay(
