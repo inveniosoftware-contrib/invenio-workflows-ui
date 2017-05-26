@@ -250,7 +250,7 @@ class WorkflowUIRecord(Record):
 
     @property
     def revision_id(self):
-        """Special override as workflow object does not have revision."""
+        """Override as workflow object does not have revision."""
         return None
 
     @property
