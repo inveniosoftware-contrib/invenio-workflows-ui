@@ -77,7 +77,7 @@ INSTALL_REQUIRES = [
     'invenio-indexer>=1.0.0a5',
     'invenio-rest',
     'flask-login',
-    'invenio-workflows~=6.0.2',
+    'invenio-workflows~=6.0',
     'flask-principal',
 ]
 
