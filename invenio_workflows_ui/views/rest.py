@@ -169,7 +169,7 @@ def create_blueprint(config, context_processors):
 
 
 def pass_workflow_object(f):
-    """Decorator to retrieve workflow object for use in views."""
+    """Retrieve workflow object to use in views."""
     @wraps(f)
     def inner(self, object_id, *args, **kwargs):
         try:
@@ -328,7 +328,7 @@ class WorkflowObjectResource(ContentNegotiatedMethodView):
 
 
 class WorkflowActionResource(ContentNegotiatedMethodView):
-    """"Workflow actions resource."""
+    """Workflow actions resource."""
 
     view_name = 'workflows_action'
 
@@ -358,7 +358,7 @@ class WorkflowActionResource(ContentNegotiatedMethodView):
 
 
 class WorkflowFilesResource(ContentNegotiatedMethodView):
-    """"Workflow file item resource."""
+    """Workflow file item resource."""
 
     view_name = 'workflows_file_list'
 
@@ -378,7 +378,7 @@ class WorkflowFilesResource(ContentNegotiatedMethodView):
 
 
 class WorkflowFileResource(ContentNegotiatedMethodView):
-    """"Workflow actions resource."""
+    """Workflow actions resource."""
 
     view_name = 'workflows_file_item'
 
@@ -399,7 +399,7 @@ class WorkflowFileResource(ContentNegotiatedMethodView):
 
 
 class WorkflowBulkActionResource(ContentNegotiatedMethodView):
-    """"Workflow bulk-actions resource."""
+    """Workflow bulk-actions resource."""
 
     view_name = 'bulk_workflows_action'
 

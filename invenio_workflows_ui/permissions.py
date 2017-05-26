@@ -31,7 +31,7 @@ action_admin_access = ActionNeed('workflows-ui-admin-access')
 
 
 def admin_permission_factory():
-    """Factory for creating a permission for an admin.
+    """Create a permission for an admin.
 
     :returns: Permission instance.
     """
