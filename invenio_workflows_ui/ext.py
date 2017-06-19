@@ -29,6 +29,7 @@ from __future__ import absolute_import, print_function
 import pkg_resources
 
 from . import config
+from .cli import holdingpen
 from .utils import obj_or_import_string
 from .views import rest, ui
 
@@ -142,6 +143,9 @@ class InvenioWorkflowsUI(object):
             app.config['WORKFLOWS_UI_TEMPLATE_CONTEXT_PROCESSORS']
         ))
         app.extensions['invenio-workflows-ui'] = state
+
+        app.cli.add_command(holdingpen)
+
         return state
 
     def __getattr__(self, name):
