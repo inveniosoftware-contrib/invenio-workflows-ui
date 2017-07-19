@@ -205,14 +205,20 @@ class WorkflowUIRecord(Record):
         return self
 
     def restart(self, *args, **kwargs):
-        """Resume execution from current task/callback in workflow."""
+        """Restart the whole workflow.
+
+        Params:
+            callback_pos(list(int)): if passed will restart the workflow from
+                the given callback_pos instead of restarting from scratch.
+
+        """
         if self.model is None:
             raise MissingModelError()
 
         if 'callback_pos' in kwargs:
             self.workflow.callback_pos = kwargs['callback_pos']
         else:
-            self.workflow.callback_pos = [1]
+            self.workflow.callback_pos = [0]
 
         self.workflow.status = ObjectStatus[WorkflowStatus.RUNNING.name]
         self.workflow.save()
