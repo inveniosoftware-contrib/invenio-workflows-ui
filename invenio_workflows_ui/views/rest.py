@@ -307,7 +307,9 @@ class WorkflowObjectResource(ContentNegotiatedMethodView):
             workflow_ui_object.update(data)
             workflow_ui_object.commit()
             db.session.commit()
-
+            if workflow_ui_object.workflow.extra_data['conflicts']:
+                workflow_ui_object.resume()
+                
         return self.make_response(workflow_ui_object)
 
     @pass_workflow_object
