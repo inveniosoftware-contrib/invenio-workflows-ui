@@ -55,7 +55,7 @@ def reindex(yes_i_know, data_type):
 
     query = WorkflowObjectModel.query.filter(
         WorkflowObjectModel.data_type.in_(data_type)
-    )
+    ).yield_per(1000)
 
     with click.progressbar(query) as q:
         for result in q:
