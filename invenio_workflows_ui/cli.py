@@ -57,7 +57,7 @@ def reindex(yes_i_know, data_type):
         WorkflowObjectModel.data_type.in_(data_type)
     )
 
-    with click.progressbar(query) as q:
+    with click.progressbar(query.yield_per(1000), length=query.count()) as q:
         for result in q:
             workflow_object = WorkflowObject.get(result.id)
             workflow_api_class.create(workflow_object)
