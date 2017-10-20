@@ -26,8 +26,10 @@
 from __future__ import absolute_import, print_function
 
 import click
+import elasticsearch
+from flask import current_app
 from flask.cli import with_appcontext
-
+from invenio_search import current_search_client as es
 from invenio_workflows.api import WorkflowObject
 from invenio_workflows.models import WorkflowObjectModel
 
@@ -56,8 +58,54 @@ def reindex(yes_i_know, data_type):
     query = WorkflowObjectModel.query.filter(
         WorkflowObjectModel.data_type.in_(data_type)
     )
+    indexer = workflow_api_class.indexer
+    req_timeout = current_app.config.get('INDEXER_BULK_REQUEST_TIMEOUT')
 
-    with click.progressbar(query.yield_per(1000), length=query.count()) as q:
-        for result in q:
-            workflow_object = WorkflowObject.get(result.id)
-            workflow_api_class.create(workflow_object)
+    def actions():
+        with click.progressbar(
+            query.yield_per(1000),
+            length=query.count()
+        ) as results:
+            for result in results:
+                workflow_object = WorkflowObject.get(result.id)
+                record = workflow_api_class.record_from_object(workflow_object)
+                workflow_api_object = workflow_api_class(
+                    record,
+                    workflow=workflow_object,
+                )
+                index, doc_type = indexer.record_to_index(workflow_api_object)
+                body = indexer._prepare_record(
+                    workflow_api_object,
+                    index,
+                    doc_type,
+                )
+                yield {
+                    '_id': workflow_api_object.id,
+                    '_index': index,
+                    '_type': doc_type,
+                    '_op_type': 'index',
+                    '_source': body,
+                }
+    success, failures = elasticsearch.helpers.bulk(
+        es,
+        actions(),
+        request_timeout=req_timeout,
+        raise_on_error=False,
+        raise_on_exception=False,
+    )
+
+    if failures:
+        click.secho(
+            "{} entries failed during reindexing while {} succeeded.".format(
+                len(failures),
+                success,
+            ),
+            fg='red',
+        )
+        click.secho(u'\n'.join(failures))
+    else:
+        click.secho(
+            "{} entries were successfully reindexed.".format(success),
+            fg='green',
+        )
+    return bool(failures)
