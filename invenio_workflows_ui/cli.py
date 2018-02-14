@@ -25,6 +25,8 @@
 
 from __future__ import absolute_import, print_function
 
+import pprint
+
 import click
 import elasticsearch
 from flask import current_app
@@ -102,7 +104,7 @@ def reindex(yes_i_know, data_type):
             ),
             fg='red',
         )
-        click.secho(u'\n'.join(failures))
+        click.secho(pprint.pformat(failures))
     else:
         click.secho(
             "{} entries were successfully reindexed.".format(success),
