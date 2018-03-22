@@ -23,7 +23,11 @@ from __future__ import absolute_import, print_function
 
 import pytz
 
+from flask import current_app
+
 from invenio_indexer.api import RecordIndexer
+
+from werkzeug import import_string
 
 
 class WorkflowIndexer(RecordIndexer):
@@ -32,7 +36,10 @@ class WorkflowIndexer(RecordIndexer):
     @staticmethod
     def _prepare_record(record, index, doc_type):
         """Prepare the workflow object record for ES."""
-        data = record.dumps()
+        serializer_config = current_app.config['WORKFLOWS_UI_JSON_INDEXER_SERIALIZER']
+        serializer = import_string(serializer_config)
+        data = serializer.serialize(record)
+
         if record.model.created.tzinfo:
             data['_created'] = record.model.created.isoformat()
         else:
