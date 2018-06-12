@@ -52,7 +52,7 @@ from ..search import default_search_factory
 from ..tasks import resolve_actions
 from ..utils import obj_or_import_string
 from ..proxies import workflow_api_class
-from ..permissions import action_admin_permission
+from ..permissions import action_read_permission, action_write_permission
 
 
 def create_blueprint(config, context_processors):
@@ -217,7 +217,7 @@ class WorkflowsListResource(ContentNegotiatedMethodView):
         self.max_result_window = max_result_window
         self.search_factory = partial(search_factory, self)
 
-    @action_admin_permission.require(http_exception=403)
+    @action_read_permission.require(http_exception=403)
     def get(self, **kwargs):
         """Search records.
 
@@ -284,7 +284,7 @@ class WorkflowObjectResource(ContentNegotiatedMethodView):
             **kwargs)
 
     @pass_workflow_object
-    @action_admin_permission.require(http_exception=403)
+    @action_read_permission.require(http_exception=403)
     def get(self, workflow_ui_object, **kwargs):
         """Get a record.
 
@@ -294,7 +294,7 @@ class WorkflowObjectResource(ContentNegotiatedMethodView):
         return self.make_response(workflow_ui_object)
 
     @pass_workflow_object
-    @action_admin_permission.require(http_exception=403)
+    @action_write_permission.require(http_exception=403)
     def put(self, workflow_ui_object, **kwargs):
         """Replace a workflow object.
 
@@ -311,7 +311,7 @@ class WorkflowObjectResource(ContentNegotiatedMethodView):
         return self.make_response(workflow_ui_object)
 
     @pass_workflow_object
-    @action_admin_permission.require(http_exception=403)
+    @action_write_permission.require(http_exception=403)
     def delete(self, workflow_ui_object, **kwargs):
         """Delete a workflow object.
 
@@ -341,7 +341,7 @@ class WorkflowActionResource(ContentNegotiatedMethodView):
         )
 
     @pass_workflow_object
-    @action_admin_permission.require(http_exception=403)
+    @action_write_permission.require(http_exception=403)
     def post(self, workflow_ui_object, action, *args, **kwargs):
         """Post."""
         kwargs['request_data'] = request.json
@@ -371,7 +371,7 @@ class WorkflowFilesResource(ContentNegotiatedMethodView):
         )
 
     @pass_workflow_object
-    @action_admin_permission.require(http_exception=403)
+    @action_read_permission.require(http_exception=403)
     def get(self, workflow_ui_object, *args, **kwargs):
         """Get."""
         return self.make_response(workflow_ui_object.files)
@@ -391,7 +391,7 @@ class WorkflowFileResource(ContentNegotiatedMethodView):
         )
 
     @pass_workflow_object
-    @action_admin_permission.require(http_exception=403)
+    @action_read_permission.require(http_exception=403)
     def get(self, workflow_ui_object, key, *args, **kwargs):
         """Get."""
         file_obj = workflow_ui_object.files[key]
@@ -411,7 +411,7 @@ class WorkflowBulkActionResource(ContentNegotiatedMethodView):
             **kwargs
         )
 
-    @action_admin_permission.require(http_exception=403)
+    @action_write_permission.require(http_exception=403)
     def post(self, action, *args, **kwargs):
         """Handle deposit action."""
         from flask_login import current_user

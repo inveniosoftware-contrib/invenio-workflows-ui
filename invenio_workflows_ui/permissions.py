@@ -24,24 +24,14 @@
 
 """Permissions for holding pen."""
 
-import pkg_resources
 from flask_principal import ActionNeed
+from invenio_access.permissions import Permission
 
 action_admin_access = ActionNeed('workflows-ui-admin-access')
+action_read_access = ActionNeed('workflows-ui-read-access')
+action_write_access = ActionNeed('workflows-ui-write-access')
 
 
-def admin_permission_factory():
-    """Create a permission for an admin.
-
-    :returns: Permission instance.
-    """
-    try:
-        pkg_resources.get_distribution('invenio-access')
-        from invenio_access.permissions import DynamicPermission as Permission
-    except pkg_resources.DistributionNotFound:
-        from flask_principal import Permission
-
-    return Permission(action_admin_access)
-
-
-action_admin_permission = admin_permission_factory()
+action_admin_permission = Permission(action_admin_access)
+action_read_permission = Permission(action_admin_access, action_read_access)
+action_write_permission = Permission(action_admin_access, action_write_access)
