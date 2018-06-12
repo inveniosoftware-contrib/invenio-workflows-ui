@@ -74,6 +74,7 @@ INSTALL_REQUIRES = [
     'autosemver~=0.2,>=0.2',
     'elasticsearch-dsl~=2.0,>=2.2.0',
     'Flask-BabelEx>=0.9.2',
+    'invenio-access~=1.0,>=1.0.1',
     'invenio-search>=1.0.0a5',
     'invenio-indexer>=1.0.0a5',
     'invenio-rest',
@@ -104,16 +105,30 @@ if __name__ == '__main__':
         platforms='any',
         entry_points={
             'invenio_base.apps': [
-                'invenio_workflows_ui '
-                '= invenio_workflows_ui:InvenioWorkflowsUI',
+                (
+                    'invenio_workflows_ui '
+                    '= invenio_workflows_ui:InvenioWorkflowsUI'
+                ),
             ],
             'invenio_base.api_apps': [
-                'invenio_workflows_ui '
-                '= invenio_workflows_ui:InvenioWorkflowsUIREST',
+                (
+                    'invenio_workflows_ui '
+                    '= invenio_workflows_ui:InvenioWorkflowsUIREST'
+                ),
             ],
             'invenio_access.actions': [
-                'holdingpen_admin_access'
-                ' = invenio_workflows_ui.permissions:action_admin_access',
+                (
+                    'holdingpen_read_access'
+                    ' = invenio_workflows_ui.permissions:action_read_access'
+                ),
+                (
+                    'holdingpen_write_access'
+                    ' = invenio_workflows_ui.permissions:action_write_access'
+                ),
+                (
+                    'holdingpen_admin_access'
+                    ' = invenio_workflows_ui.permissions:action_admin_access'
+                ),
             ],
             'invenio_celery.tasks': [
                 'invenio_workflows_ui = invenio_workflows_ui.tasks',
