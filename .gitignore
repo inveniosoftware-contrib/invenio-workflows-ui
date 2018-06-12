@@ -5,6 +5,9 @@ __pycache__/
 # Idea software family
 .idea/
 
+# Vim swapfiles
+.*sw?
+
 # C extensions
 *.so
 
@@ -57,3 +60,7 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# Autosemver
+AUTHORS
+CHANGELOG
