@@ -54,12 +54,18 @@ EXTRAS_REQUIRE = {
     'sqlite': [
         'invenio-db>=1.0.0a9',
     ],
+    'elasticsearch2': [
+        'elasticsearch-dsl~=2.0',
+    ],
+    'elasticsearch5': [
+        'elasticsearch-dsl~=5.0',
+    ],
     'tests': TESTS_REQUIRE,
 }
 
 EXTRAS_REQUIRE['all'] = []
 for name, reqs in EXTRAS_REQUIRE.items():
-    if name in ('mysql', 'postgresql', 'sqlite'):
+    if name in ('postgresql', 'sqlite', 'elasticsearch2', 'elasticsearch5'):
         continue
     EXTRAS_REQUIRE['all'].extend(reqs)
 
@@ -72,7 +78,6 @@ SETUP_REQUIRES = [
 
 INSTALL_REQUIRES = [
     'autosemver~=0.2,>=0.2',
-    'elasticsearch-dsl~=2.0,>=2.2.0',
     'Flask-BabelEx>=0.9.2',
     'invenio-access~=1.0,>=1.0.1',
     'invenio-search>=1.0.0a5',
