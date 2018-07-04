@@ -43,7 +43,7 @@ before_install:
 
 install:
   - "travis_retry pip install -r requirements.txt"
-  - "travis_retry pip install -e .[all]"
+  - "travis_retry pip install -e .[all,elasticsearch2]"
 
 script:
   - "./run-tests.sh"
