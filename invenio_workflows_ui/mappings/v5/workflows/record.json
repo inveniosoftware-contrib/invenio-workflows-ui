@@ -9,12 +9,10 @@
           "type": "object",
           "properties": {
             "status": {
-              "type": "string",
-              "index": "not_analyzed"
+              "type": "keyword"
             },
             "data_type": {
-              "type": "string",
-              "index": "not_analyzed"
+              "type": "keyword"
             },
             "created": {
               "type": "date"
@@ -23,28 +21,22 @@
               "type": "date"
             },
             "id_workflow": {
-              "type": "string",
-              "index": "not_analyzed"
+              "type": "keyword"
             },
             "id_user": {
-              "type": "integer",
-              "index": "not_analyzed"
+              "type": "integer"
             },
             "id_parent": {
-              "type": "integer",
-              "index": "not_analyzed"
+              "type": "integer"
             },
             "workflow_class": {
-              "type": "string",
-              "index": "not_analyzed"
+              "type": "keyword"
             },
             "workflow_name": {
-              "type": "string",
-              "index": "not_analyzed"
+              "type": "keyword"
             },
             "workflow_position": {
-              "type": "string",
-              "index": "not_analyzed"
+              "type": "keyword"
             }
           }
         }
