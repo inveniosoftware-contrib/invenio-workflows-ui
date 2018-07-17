@@ -34,8 +34,11 @@ from flask.cli import with_appcontext
 from invenio_search import current_search_client as es
 from invenio_workflows.api import WorkflowObject
 from invenio_workflows.models import WorkflowObjectModel
+from itertools import chain
+from time import sleep
 
 from .proxies import workflow_api_class
+from .tasks import batch_reindex
 
 
 @click.group()
@@ -43,71 +46,93 @@ def holdingpen():
     """Manage holdingpen."""
 
 
+def next_batch(iterator, batch_size):
+    """Get first batch_size elements from the iterable, or remaining if less.
+
+    :param iterator: the iterator for the iterable
+    :param batch_size: size of the requested batch
+    :return: batch (list)
+    """
+    batch = []
+
+    try:
+        for idx in range(batch_size):
+            batch.append(next(iterator))
+    except StopIteration:
+        pass
+
+    return batch
+
+
 @holdingpen.command()
 @click.option('--yes-i-know', is_flag=True)
 @click.option('-t', '--data-type', multiple=True, required=True)
+@click.option('-s', '--batch-size', default=200)
 @with_appcontext
-def reindex(yes_i_know, data_type):
-    """Reindex all records.
+def reindex(yes_i_know, data_type, batch_size):
+    """Reindex all records in a parallel manner.
 
+    :param yes_i_know: if True, skip confirmation screen
     :param data_type: workflow data type.
+    :param batch_size: number of documents per batch sent to workers.
     """
     if not yes_i_know:
-        click.confirm('Do you really want to reindex all records?', abort=True)
+        click.confirm(
+            'Do you really want to reindex the workflows?',
+            abort=True,
+        )
 
-    click.secho('Sending records to indexing queue ...', fg='green')
+    click.secho('Sending workflows to the indexing queue...', fg='green')
 
     query = WorkflowObjectModel.query.filter(
         WorkflowObjectModel.data_type.in_(data_type)
     )
-    indexer = workflow_api_class.indexer
-    req_timeout = current_app.config.get('INDEXER_BULK_REQUEST_TIMEOUT')
+    request_timeout = current_app.config.get('INDEXER_BULK_REQUEST_TIMEOUT')
+    all_tasks = []
 
-    def actions():
-        with click.progressbar(
-            query.yield_per(1000),
-            length=query.count()
-        ) as results:
-            for result in results:
-                workflow_object = WorkflowObject.get(result.id)
-                record = workflow_api_class.record_from_object(workflow_object)
-                workflow_api_object = workflow_api_class(
-                    record,
-                    workflow=workflow_object,
-                )
-                index, doc_type = indexer.record_to_index(workflow_api_object)
-                body = indexer._prepare_record(
-                    workflow_api_object,
-                    index,
-                    doc_type,
-                )
-                yield {
-                    '_id': workflow_api_object.id,
-                    '_index': index,
-                    '_type': doc_type,
-                    '_op_type': 'index',
-                    '_source': body,
-                }
-    success, failures = elasticsearch.helpers.bulk(
-        es,
-        actions(),
-        request_timeout=req_timeout,
-        raise_on_error=False,
-        raise_on_exception=False,
+    with click.progressbar(
+        query.yield_per(1000),
+        length=query.count(),
+        label='Scheduling indexing tasks'
+    ) as items:
+        batch = next_batch(items, batch_size)
+
+        while batch:
+            task = batch_reindex.apply_async(
+                kwargs={
+                    'workflow_ids': [item.id for item in batch],
+                    'request_timeout': request_timeout,
+                },
+                queue='indexer_tasks',
+            )
+
+            all_tasks.append(task)
+            batch = next_batch(items, batch_size)
+
+    click.secho('Created {} tasks.'.format(len(all_tasks)), fg='green')
+
+    with click.progressbar(
+        length=len(all_tasks),
+        label='Indexing workflows'
+    ) as progressbar:
+        def _finished_tasks_count():
+            return len(filter(lambda task: task.ready(), all_tasks))
+
+        while len(all_tasks) != _finished_tasks_count():
+            sleep(0.5)
+            progressbar.pos = _finished_tasks_count()
+            progressbar.update(0)
+
+    successes = sum([task.result.get('success', 0) for task in all_tasks])
+    failures = sum([task.result.get('failures', []) for task in all_tasks], [])
+
+    color = 'red' if failures else 'green'
+    click.secho(
+        'Reindexing failed for {} records, succeeded for {}.'.format(
+            len(failures),
+            successes
+        ),
+        fg=color,
     )
-
     if failures:
-        click.secho(
-            "{} entries failed during reindexing while {} succeeded.".format(
-                len(failures),
-                success,
-            ),
-            fg='red',
-        )
-        click.secho(pprint.pformat(failures))
-    else:
-        click.secho(
-            "{} entries were successfully reindexed.".format(success),
-            fg='green',
-        )
-    return bool(failures)
+        click.secho('Errors: {}'.format(failures), fg='red')
