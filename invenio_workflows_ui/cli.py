@@ -68,13 +68,15 @@ def next_batch(iterator, batch_size):
 @click.option('--yes-i-know', is_flag=True)
 @click.option('-t', '--data-type', multiple=True, required=True)
 @click.option('-s', '--batch-size', default=200)
+@click.option('-q', '--queue-name', default='indexer_task')
 @with_appcontext
-def reindex(yes_i_know, data_type, batch_size):
+def reindex(yes_i_know, data_type, batch_size, queue_name):
     """Reindex all records in a parallel manner.
 
     :param yes_i_know: if True, skip confirmation screen
     :param data_type: workflow data type.
     :param batch_size: number of documents per batch sent to workers.
+    :param queue_name: name of the celery queue
     """
     if not yes_i_know:
         click.confirm(
@@ -103,7 +105,7 @@ def reindex(yes_i_know, data_type, batch_size):
                     'workflow_ids': [item.id for item in batch],
                     'request_timeout': request_timeout,
                 },
-                queue='indexer_tasks',
+                queue=queue_name,
             )
 
             all_tasks.append(task)
