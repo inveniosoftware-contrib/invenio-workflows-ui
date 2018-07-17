@@ -75,13 +75,21 @@ def batch_reindex(workflow_ids, request_timeout):
             except WorkflowsError as e:
                 LOGGER.warn('Workflow %s failed to load: %s', workflow_id, e)
 
-    success, failures = elasticsearch.helpers.bulk(
-        current_search_client,
-        actions(),
-        request_timeout=request_timeout,
-        raise_on_error=False,
-        raise_on_exception=False,
-    )
+    try:
+        success, failures = elasticsearch.helpers.bulk(
+            current_search_client,
+            actions(),
+            request_timeout=request_timeout,
+            raise_on_error=False,
+            raise_on_exception=False,
+        )
+    except Exception as e:
+        return {
+            'failures': [{
+                'error': repr(e),
+                'workflow_ids': workflow_ids,
+            }],
+        }
 
     return {
         'success': success,
