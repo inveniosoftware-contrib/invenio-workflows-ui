@@ -129,5 +129,11 @@ def reindex(yes_i_know, data_type, batch_size, queue_name):
         ),
         fg=color,
     )
+
+    log_path = '/tmp/holdingpen_index.err'
+    with open(log_path, 'w') as log:
+        for failure in failures:
+            log.write('%s\n' % repr(failure))
+
     if failures:
-        click.secho('Errors: {}'.format(failures), fg='red')
+        click.secho('You can see the errors in %s' % log_path)
