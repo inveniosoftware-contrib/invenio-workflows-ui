@@ -25,19 +25,13 @@
 
 from __future__ import absolute_import, print_function
 
-import pprint
-
 import click
-import elasticsearch
 from flask import current_app
 from flask.cli import with_appcontext
-from invenio_search import current_search_client as es
-from invenio_workflows.api import WorkflowObject
+from invenio_db import db
 from invenio_workflows.models import WorkflowObjectModel
-from itertools import chain
 from time import sleep
 
-from .proxies import workflow_api_class
 from .tasks import batch_reindex
 
 
@@ -86,14 +80,12 @@ def reindex(yes_i_know, data_type, batch_size, queue_name):
 
     click.secho('Sending workflows to the indexing queue...', fg='green')
 
-    query = WorkflowObjectModel.query.filter(
-        WorkflowObjectModel.data_type.in_(data_type)
-    )
+    query = db.session.query(WorkflowObjectModel.id)
     request_timeout = current_app.config.get('INDEXER_BULK_REQUEST_TIMEOUT')
     all_tasks = []
 
     with click.progressbar(
-        query.yield_per(1000),
+        query.yield_per(2000),
         length=query.count(),
         label='Scheduling indexing tasks'
     ) as items:
@@ -102,7 +94,7 @@ def reindex(yes_i_know, data_type, batch_size, queue_name):
         while batch:
             task = batch_reindex.apply_async(
                 kwargs={
-                    'workflow_ids': [item.id for item in batch],
+                    'workflow_ids': [item[0] for item in batch],
                     'request_timeout': request_timeout,
                 },
                 queue=queue_name,
@@ -122,7 +114,8 @@ def reindex(yes_i_know, data_type, batch_size, queue_name):
 
         while len(all_tasks) != _finished_tasks_count():
             sleep(0.5)
-            progressbar.pos = _finished_tasks_count()
+            # this is so click doesn't divide by 0:
+            progressbar.pos = _finished_tasks_count() or 1
             progressbar.update(0)
 
     successes = sum([task.result.get('success', 0) for task in all_tasks])
