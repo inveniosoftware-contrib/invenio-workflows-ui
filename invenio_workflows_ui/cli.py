@@ -80,7 +80,10 @@ def reindex(yes_i_know, data_type, batch_size, queue_name):
 
     click.secho('Sending workflows to the indexing queue...', fg='green')
 
-    query = db.session.query(WorkflowObjectModel.id)
+    query = (
+        db.session.query(WorkflowObjectModel.id)
+        .filter(WorkflowObjectModel.data_type.in_(data_type))
+    )
     request_timeout = current_app.config.get('INDEXER_BULK_REQUEST_TIMEOUT')
     all_tasks = []
 
