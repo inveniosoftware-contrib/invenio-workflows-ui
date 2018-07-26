@@ -29,6 +29,7 @@ from __future__ import absolute_import, print_function
 import os
 import json
 
+from hashlib import sha1
 from functools import partial, wraps
 
 from flask import (
@@ -45,6 +46,7 @@ from invenio_rest import ContentNegotiatedMethodView
 from invenio_rest.errors import RESTException
 from invenio_search import RecordsSearch
 from flask_login import current_user
+from six import text_type
 
 from invenio_workflows.errors import WorkflowsMissingObject
 
@@ -291,6 +293,12 @@ class WorkflowObjectResource(ContentNegotiatedMethodView):
         :param workflow_ui_object: workflow_api_class object.
         :returns: The requested record.
         """
+        etag_value = text_type(workflow_ui_object.model.modified)
+        etag = sha1(etag_value.encode('utf-8')).hexdigest()
+        self.check_etag(etag)
+        self.check_if_modified_since(
+            workflow_ui_object.model.modified, etag=etag)
+
         return self.make_response(workflow_ui_object)
 
     @pass_workflow_object

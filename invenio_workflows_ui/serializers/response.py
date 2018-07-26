@@ -31,6 +31,9 @@ from __future__ import absolute_import, print_function
 
 from flask import current_app
 
+from hashlib import sha1
+from six import text_type
+
 
 def workflow_responsify(serializer, mimetype):
     """Create a Workflows-REST response serializer.
@@ -43,6 +46,11 @@ def workflow_responsify(serializer, mimetype):
             serializer.serialize(workflow_object),
             mimetype=mimetype)
         response.status_code = code
+        etag_value = text_type(workflow_object.model.modified)
+        etag = sha1(etag_value.encode('utf-8')).hexdigest()
+
+        response.set_etag(etag)
+        response.last_modified = workflow_object.model.modified
 
         if headers is not None:
             response.headers.extend(headers)
