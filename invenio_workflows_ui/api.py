@@ -216,28 +216,8 @@ class WorkflowUIRecord(Record):
         if self.model is None:
             raise MissingModelError()
 
-        if 'callback_pos' in kwargs:
-            self.workflow.callback_pos = kwargs['callback_pos']
-        else:
-            self.workflow.callback_pos = [0]
-
-        if 'cleanup' in kwargs:
-            original_extra_data = self.workflow.extra_data.get(
-                'source_data',
-                {},
-            ).get('extra_data', {})
-            original_data = self.workflow.extra_data.get(
-                'source_data',
-                {},
-            ).get('data', {})
-            self.workflow.extra_data = original_extra_data
-            self.workflow.data = original_data
-            self.workflow.extra_data['source_data'] = {
-                'data': copy.deepcopy(original_data),
-                'extra_data': copy.deepcopy(original_extra_data),
-            }
-
-        self.workflow.status = ObjectStatus[WorkflowStatus.RUNNING.name]
+        self.workflow.callback_pos = [0]
+        self.workflow.status = ObjectStatus.RUNNING
         self.workflow.save()
         db.session.commit()
         return resume.delay(
