@@ -205,14 +205,21 @@ class WorkflowUIRecord(Record):
             self.commit()
         return self
 
+    def restart_step(self, *args, **kwargs):
+        """Restart only the current step of the workflow."""
+        if self.model is None:
+            raise MissingModelError()
+
+        self.workflow.status = ObjectStatus.RUNNING
+        self.workflow.save()
+        db.session.commit()
+        return resume.delay(
+            oid=self.workflow.id,
+            restart_point="restart_task"
+        ).id
+
     def restart(self, *args, **kwargs):
-        """Restart the whole workflow.
-
-        Params:
-            callback_pos(list(int)): if passed will restart the workflow from
-                the given callback_pos instead of restarting from scratch.
-
-        """
+        """Restart the whole workflow."""
         if self.model is None:
             raise MissingModelError()
 
