@@ -116,7 +116,9 @@ def create_blueprint(config, context_processors):
     )
     item_route = config.get('item_route')
 
-    actions_segment = "action/<any(resolve,restart,resume,edit):action>"
+    actions_segment = (
+        "action/<any(resolve,restart,restart_step,resume,edit):action>"
+    )
 
     action_route = os.path.join(
         item_route,
