@@ -74,7 +74,7 @@ INSTALL_REQUIRES = [
     'autosemver~=0.2,>=0.2',
     'Flask-BabelEx>=0.9.2',
     'invenio-access~=1.0,>=1.0.1',
-    'invenio-search[elasticsearch6]~=1.0,>=1.1.1',
+    'invenio-search[elasticsearch6]~=1.1.1',
     'invenio-indexer>=1.0.0a5',
     'invenio-rest',
     'flask-login',
