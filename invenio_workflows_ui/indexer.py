@@ -23,6 +23,7 @@ from __future__ import absolute_import, print_function
 
 import pytz
 
+from elasticsearch import VERSION as ES_VERSION
 from invenio_indexer.api import RecordIndexer
 
 
@@ -30,7 +31,7 @@ class WorkflowIndexer(RecordIndexer):
     """Special indexer for workflow objects."""
 
     @staticmethod
-    def _prepare_record(record, index, doc_type):
+    def _prepare_record(record, index, doc_type=None):
         """Prepare the workflow object record for ES."""
         data = record.dumps()
         if record.model.created.tzinfo:
@@ -57,11 +58,20 @@ class WorkflowIndexer(RecordIndexer):
         :param record: Record instance.
         """
         index, doc_type = self.record_to_index(record)
-        if not index or not doc_type:
+        if not index:
             return
-        return self.client.index(
-            id=str(record.id),
-            index=index,
-            doc_type=doc_type,
-            body=self._prepare_record(record, index, doc_type),
-        )
+        if ES_VERSION[0] >= 7:
+            return self.client.index(
+                id=str(record.id),
+                index=index,
+                body=self._prepare_record(record, index),
+            )
+        else:
+            if not doc_type:
+                return
+            return self.client.index(
+                id=str(record.id),
+                index=index,
+                doc_type=doc_type,
+                body=self._prepare_record(record, index, doc_type),
+            )
