@@ -29,6 +29,7 @@ from __future__ import absolute_import, print_function
 import os
 import json
 
+from elasticsearch import VERSION as ES_VERSION
 from hashlib import sha1
 from functools import partial, wraps
 
@@ -252,7 +253,12 @@ class WorkflowsListResource(ContentNegotiatedMethodView):
         links = dict(self=url_for(endpoint, page=page, **urlkwargs))
         if page > 1:
             links['prev'] = url_for(endpoint, page=page-1, **urlkwargs)
-        if size * page < int(search_result.hits.total) and \
+        if ES_VERSION[0] >= 7:
+            all_results_count = int(search_result.hits.total.value)
+        else:
+            all_results_count = int(search_result.hits.total)
+
+        if size * page < all_results_count and \
                 size * page < self.max_result_window:
             links['next'] = url_for(endpoint, page=page+1, **urlkwargs)
 

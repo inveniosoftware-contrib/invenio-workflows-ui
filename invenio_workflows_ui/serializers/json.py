@@ -26,6 +26,7 @@
 
 from __future__ import absolute_import, print_function
 
+from elasticsearch import VERSION as ES_VERSION
 from flask import current_app, json, request
 
 
@@ -84,11 +85,15 @@ class JSONSerializer(object):
         :param search_result: Elasticsearch search result.
         :param links: Dictionary of links to add to response.
         """
+        hits = dict(
+            hits=search_result['hits']['hits'],
+        )
+        if ES_VERSION[0] >= 7:
+            hits['total'] = search_result['hits']['total']['value']
+        else:
+            hits['total'] = search_result['hits']['total']
         return json.dumps(dict(
-            hits=dict(
-                hits=search_result['hits']['hits'],
-                total=search_result['hits']['total'],
-            ),
+            hits=hits,
             links=links or {},
             aggregations=search_result.get('aggregations', dict()),
         ), **self._format_args())
