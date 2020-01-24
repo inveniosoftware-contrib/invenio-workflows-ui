@@ -81,6 +81,8 @@ def batch_reindex(workflow_ids, request_timeout):
         request_timeout=request_timeout,
         raise_on_error=False,
         raise_on_exception=False,
+        max_retries=5,
+        initial_backoff=10,
     )
 
     return {
