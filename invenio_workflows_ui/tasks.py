@@ -68,7 +68,6 @@ def batch_reindex(workflow_ids, request_timeout):
                 yield {
                     '_id': workflow_api_object.id,
                     '_index': index,
-                    '_type': doc_type,
                     '_op_type': 'index',
                     '_source': body,
                 }
